@@ -21,6 +21,7 @@
                 <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">NAME</th>
                 <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">USERNAME</th>
                 <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">EMAIL</th>
+                <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">ASSIGNED BLOCK</th>
                 <th style="padding:12px 16px;text-align:center;font-size:0.78rem;color:#6c757d;font-weight:700;">ACTION</th>
             </tr>
         </thead>
@@ -41,6 +42,26 @@
             </td>
             <td style="padding:14px 16px;font-family:monospace;color:#0f3460;font-size:0.88rem;">{{ warden.username }}</td>
             <td style="padding:14px 16px;font-size:0.85rem;color:#6c757d;">{{ warden.email|default:"—" }}</td>
+            <td style="padding:14px 16px;">
+                {% if warden_blocks|default:None %}
+                    {% with block=warden_blocks|default:None %}
+                        {% for bid, blk in warden_blocks.items %}
+                            {% if bid == warden.pk %}
+                                <span style="background:{% if blk.block_type == 'boys' %}#EFF6FF{% else %}#FFF0F3{% endif %};
+                                    color:{% if blk.block_type == 'boys' %}#2563EB{% else %}#e94560{% endif %};
+                                    padding:4px 10px;border-radius:20px;font-size:0.78rem;font-weight:700;">
+                                    🏢 {{ blk.name }}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                {% endif %}
+                {% with assigned=warden_blocks %}
+                    {% if not warden.pk in warden_blocks %}
+                        <span style="color:#aaa;font-size:0.82rem;">— Not assigned</span>
+                    {% endif %}
+                {% endwith %}
+            </td>
             <td style="padding:14px 16px;text-align:center;">
                 <form method="post" action="{% url 'warden_delete' warden.pk %}"
                       onsubmit="return confirm('Delete warden {{ warden.username }}? This cannot be undone!')">
@@ -54,7 +75,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5" style="text-align:center;padding:60px;color:#aaa;">
+            <td colspan="6" style="text-align:center;padding:60px;color:#aaa;">
                 <div style="font-size:3rem;margin-bottom:12px;">🔑</div>
                 <p>No wardens created yet.</p>
                 <a href="{% url 'warden_create' %}" style="color:#e94560;font-weight:700;text-decoration:none;">Create first warden →</a>
@@ -67,7 +88,7 @@
 
 <style>
 @media (max-width: 768px) {
-    table { min-width: 500px; }
+    table { min-width: 600px; }
     div:has(> table) { overflow-x: auto; }
 }
 </style>

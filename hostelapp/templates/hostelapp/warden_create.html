@@ -57,6 +57,25 @@
                        placeholder="Enter email address">
             </div>
 
+            <!-- Block Assignment -->
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:6px;display:block;">
+                    Assign Block <span style="color:#aaa;font-weight:400;">(optional)</span>
+                </label>
+                <select name="block" class="form-control">
+                    <option value="">-- No Block Assigned --</option>
+                    {% for block in blocks %}
+                    <option value="{{ block.pk }}"
+                        {% if request.POST.block == block.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ block.name }} ({{ block.get_block_type_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <small style="color:#aaa;font-size:0.75rem;margin-top:4px;display:block;">
+                    The warden will only see students and data from the assigned block.
+                </small>
+            </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
                 <div>
                     <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:6px;display:block;">Password <span style="color:#e94560;">*</span></label>

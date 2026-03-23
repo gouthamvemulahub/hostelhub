@@ -2200,8 +2200,14 @@ def warden_list(request):
         return redirect('dashboard')
     warden_group, _ = Group.objects.get_or_create(name='Warden')
     wardens = UserModel.objects.filter(groups=warden_group)
+    # Get assigned block for each warden
+    warden_blocks = {}
+    for block in HostelBlock.objects.filter(is_active=True):
+        if block.warden_id:
+            warden_blocks[block.warden_id] = block
     return render(request, 'hostelapp/warden_list.html', {
         'wardens': wardens,
+        'warden_blocks': warden_blocks,
     })
 
 
@@ -2271,10 +2277,22 @@ def warden_create(request):
                         pass
 
                 user.groups.add(group)
+
+                # Assign block to warden if selected
+                block_id = request.POST.get('block', '')
+                if block_id:
+                    try:
+                        block = HostelBlock.objects.get(pk=block_id)
+                        block.warden = user
+                        block.save()
+                    except HostelBlock.DoesNotExist:
+                        pass
+
                 messages.success(request, f'✅ Warden "{username}" created successfully!')
                 return redirect('warden_list')
 
-    return render(request, 'hostelapp/warden_create.html')
+    blocks = HostelBlock.objects.filter(is_active=True)
+    return render(request, 'hostelapp/warden_create.html', {'blocks': blocks})
 
 
 @login_required
