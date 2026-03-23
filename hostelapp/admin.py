@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import StudentProfile, Room, RoomAllotment, Complaint, Notice, NoticeRead, StaffMember, OTPVerification, Attendance, ComplaintUpvote, Message, Notification, HostelRule, LeaveRequest, FeePayment, RoomPhoto, HostelGallery, StudentDocument, HostelBlock
+from django.contrib.auth.models import User
+from .models import StudentProfile, Room, RoomAllotment, Complaint, Notice, NoticeRead, StaffMember, OTPVerification, Attendance, ComplaintUpvote, Message, Notification, HostelRule, LeaveRequest, FeePayment, RoomPhoto, HostelGallery, StudentDocument, WardenMessage, HostelBlock
 
 
 @admin.register(StudentProfile)
@@ -41,7 +42,6 @@ class RoomAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         actions = super().get_actions(request)
-        # Add one action per block
         for block in HostelBlock.objects.all():
             action_name = f'assign_to_{block.pk}'
             action = self.make_assign_action(block)
@@ -123,8 +123,8 @@ class LeaveRequestAdmin(admin.ModelAdmin):
 
 #@admin.register(FeePayment)
 #class FeePaymentAdmin(admin.ModelAdmin):
- #   list_display  = ['student', 'month', 'year', 'amount', 'payment_method', 'status', 'paid_on']
-  #  list_filter   = ['status', 'payment_method', 'year']
+#    list_display  = ['student', 'month', 'year', 'amount', 'payment_method', 'status', 'paid_on']
+#    list_filter   = ['status', 'payment_method', 'year']
 
 @admin.register(RoomPhoto)
 class RoomPhotoAdmin(admin.ModelAdmin):
@@ -141,8 +141,22 @@ class StudentDocumentAdmin(admin.ModelAdmin):
     list_filter   = ["document_type", "is_verified"]
 
 
+@admin.register(WardenMessage)
+class WardenMessageAdmin(admin.ModelAdmin):
+    list_display  = ['sender', 'recipient', 'content', 'is_read', 'created_at']
+    list_filter   = ['is_read']
+
+
 @admin.register(HostelBlock)
 class HostelBlockAdmin(admin.ModelAdmin):
     list_display  = ['name', 'block_type', 'warden', 'total_floors', 'is_active']
     list_filter   = ['block_type', 'is_active']
     search_fields = ['name']
+
+    # ── FIX: Only show staff members (wardens) in warden dropdown ──
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'warden':
+            kwargs['queryset'] = User.objects.filter(
+                is_staff=True, is_superuser=False
+            ).order_by('username')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
