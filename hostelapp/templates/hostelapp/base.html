@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HostelHub{% endblock %} | Hostel Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e; --accent: #e94560; --accent2: #0f3460;
+            --bg: #f8f9ff; --card-bg: #ffffff; --text: #2d2d2d;
+            --muted: #6c757d; --success: #10b981; --warning: #f59e0b;
+            --danger: #ef4444; --sidebar-w: 260px;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-w); height: 100vh; position: fixed;
+            top: 0; left: 0; background: var(--primary);
+            display: flex; flex-direction: column; z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-brand h4 { color: #fff; font-weight: 700; margin: 0; font-size: 1.3rem; letter-spacing: -0.5px; }
+        .sidebar-brand span { color: var(--accent); }
+        .sidebar-brand small { color: rgba(255,255,255,0.4); font-size: 0.7rem; font-family: 'DM Mono', monospace; }
+        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+        .nav-section-label { color: rgba(255,255,255,0.3); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; padding: 12px 20px 6px; font-family: 'DM Mono', monospace; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: rgba(255,255,255,0.65); text-decoration: none; font-size: 0.88rem; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { color: #fff; background: rgba(233,69,96,0.12); border-left-color: var(--accent); }
+        .sidebar-nav a i { width: 18px; text-align: center; font-size: 0.9rem; }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+
+        /* ── MAIN CONTENT ── */
+        .main-content { margin-left: var(--sidebar-w); min-height: 100vh; }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            background: #fff; padding: 12px 24px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            gap: 12px;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .topbar-left h5 { margin: 0; font-weight: 600; font-size: 1rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+        /* ── ICON BUTTON (topbar) ── */
+        .topbar-icon-btn {
+            width: 36px; height: 36px; background: #f8f9ff;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; text-decoration: none;
+            font-size: 1rem; border: 1px solid #e9ecef;
+            transition: all 0.2s; cursor: pointer; border: none;
+            position: relative; flex-shrink: 0;
+        }
+        .topbar-icon-btn:hover { background: #fff0f3; }
+
+        /* ── EXPORT TOPBAR BUTTON ── */
+        .export-topbar-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--primary); color: #fff;
+            border: none; border-radius: 8px;
+            padding: 7px 14px; font-size: 0.82rem;
+            font-weight: 700; cursor: pointer;
+            font-family: 'Sora', sans-serif;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .export-topbar-btn:hover { background: var(--accent2); }
+
+        /* ── USER BADGE ── */
+        .user-badge { display: flex; align-items: center; gap: 8px; background: var(--bg); padding: 6px 10px; border-radius: 50px; font-size: 0.82rem; font-weight: 600; color: var(--primary); }
+        .user-badge .avatar { width: 28px; height: 28px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .badge-admin { background: rgba(233,69,96,0.12); color: var(--accent); padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        /* ── CONTENT AREA ── */
+        .content-area { padding: 24px; }
+
+        /* ── CARDS ── */
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; font-weight: 600; padding: 16px 20px; border-radius: 12px 12px 0 0 !important; }
+
+        /* ── STAT CARDS ── */
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .stat-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+        .stat-icon.red { background: rgba(233,69,96,0.12); color: var(--accent); }
+        .stat-icon.blue { background: rgba(15,52,96,0.12); color: var(--accent2); }
+        .stat-icon.green { background: rgba(16,185,129,0.12); color: var(--success); }
+        .stat-icon.orange { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .stat-value { font-size: 1.8rem; font-weight: 700; line-height: 1; color: var(--primary); }
+        .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+        /* ── STATUS BADGES ── */
+        .status-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 600; }
+        .status-badge.available { background: rgba(16,185,129,0.12); color: #059669; }
+        .status-badge.full { background: rgba(233,69,96,0.12); color: var(--accent); }
+        .status-badge.maintenance { background: rgba(245,158,11,0.12); color: #d97706; }
+        .status-badge.pending { background: rgba(245,158,11,0.12); color: #d97706; }
+        .status-badge.in_progress { background: rgba(59,130,246,0.12); color: #2563eb; }
+        .status-badge.resolved { background: rgba(16,185,129,0.12); color: #059669; }
+        .status-badge.rejected { background: rgba(107,114,128,0.12); color: #4b5563; }
+
+        /* ── BUTTONS ── */
+        .btn-primary { background: var(--accent); border-color: var(--accent); font-weight: 600; }
+        .btn-primary:hover { background: #c73652; border-color: #c73652; }
+        .btn-outline-primary { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+        .btn-outline-primary:hover { background: var(--accent); border-color: var(--accent); }
+
+        /* ── TABLE ── */
+        .table { font-size: 0.875rem; }
+        .table thead th { background: var(--bg); color: var(--muted); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: none; padding: 12px 16px; }
+        .table tbody td { padding: 12px 16px; vertical-align: middle; border-color: #f5f5f5; }
+
+        /* ── FORMS ── */
+        .form-control, .form-select { border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 14px; font-size: 0.88rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(233,69,96,0.1); }
+        .form-label { font-weight: 600; font-size: 0.82rem; color: var(--text); margin-bottom: 6px; }
+        .alert { border: none; border-radius: 10px; font-size: 0.88rem; }
+
+        /* ── PAGE HEADER ── */
+        .page-header { margin-bottom: 24px; }
+        .page-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin: 0; }
+        .page-header p { color: var(--muted); font-size: 0.88rem; margin: 4px 0 0; }
+
+        /* ── SIDEBAR OVERLAY ── */
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 999;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+            .main-content { margin-left: 0; }
+            .content-area { padding: 12px 10px; }
+            .topbar { padding: 10px 12px; }
+            .topbar-left h5 { font-size: 0.85rem; max-width: 120px; }
+            .user-badge .user-name { display: none; }
+            .user-badge { padding: 4px 6px; }
+            .signout-text { display: none; }
+            .export-topbar-btn .btn-label { display: none; }
+            .export-topbar-btn { padding: 7px 10px; }
+            .stat-card { padding: 12px; gap: 10px; }
+            .stat-value { font-size: 1.3rem; }
+            .stat-icon { width: 40px; height: 40px; font-size: 1rem; }
+            .table-responsive-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+            table { min-width: 480px; }
+            .page-header.d-flex { flex-direction: column !important; align-items: flex-start !important; gap: 10px; }
+            .card { margin-bottom: 12px; }
+            .card-header { padding: 12px 14px; font-size: 0.85rem; }
+            .btn { font-size: 0.8rem; padding: 6px 10px; }
+            .row { --bs-gutter-x: 0.75rem; }
+            input, select, textarea { font-size: 16px !important; }
+            .page-header h2 { font-size: 1.2rem; }
+            .hide-mobile { display: none !important; }
+            .table { font-size: 0.78rem; }
+            .table thead th, .table tbody td { padding: 8px 10px; }
+        }
+
+        @media (min-width: 769px) {
+            #sidebarToggle { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+{% if user.is_authenticated %}
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <h4><span>Hostel</span>Hub</h4>
+        <small>MANAGEMENT SYSTEM</small>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-th-large"></i> Dashboard
+        </a>
+
+        {% if user.is_staff or user.is_superuser or perms.hostelapp.change_room or perms.hostelapp.add_roomallotment or perms.hostelapp.change_complaint or perms.hostelapp.view_studentprofile %}
+
+        {% if user.is_superuser %}
+        <!-- ── SUPER ADMIN SIDEBAR ── -->
+        <div class="nav-section-label">Management</div>
+        <a href="{% url 'student_list' %}" class="{% if 'student' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-users"></i> Students
+        </a>
+        <a href="{% url 'staff_list' %}" class="{% if 'staff' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-user-tie"></i> Staff
+        </a>
+        <a href="{% url 'room_list' %}" class="{% if 'room' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-door-open"></i> Rooms
+        </a>
+        <a href="{% url 'allotment_list' %}" class="{% if 'allotment' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-key"></i> Allotments
+        </a>
+        <a href="{% url 'complaint_list' %}" class="{% if 'complaint' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-exclamation-circle"></i> Complaints
+        </a>
+        <a href="{% url 'attendance_list' %}" {% if request.resolver_match.url_name == 'attendance_list' or request.resolver_match.url_name == 'attendance_report' %}class="active"{% endif %}>
+            <i class="fas fa-clipboard-check"></i> Attendance
+        </a>
+        <a href="{% url 'notice_list' %}" class="{% if 'notice' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-bullhorn"></i> Notices
+        </a>
+        <a href="{% url 'inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' or request.resolver_match.url_name == 'chat' %}active{% endif %}" style="justify-content:space-between;">
+            <span><i class="fas fa-comments"></i> Messages</span>
+            <span id="adminMsgBadge" style="display:none;background:#e94560;color:#fff;font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:20px;"></span>
+        </a>
+        <a href="{% url 'warden_inbox' %}" class="{% if request.resolver_match.url_name == 'warden_inbox' or request.resolver_match.url_name == 'warden_chat' %}active{% endif %}">
+            <i class="fas fa-comment-dots"></i> Warden Messages
+        </a>
+        <a href="{% url 'leave_list' %}" class="{% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-calendar-alt"></i> Leave Requests
+        </a>
+        <a href="{% url 'rules_list' %}" class="{% if 'rule' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-book"></i> Rules
+        </a>
+        <a href="{% url 'gallery' %}" class="{% if 'gallery' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-images"></i> Gallery
+        </a>
+        <div class="nav-section-label">System</div>
+        <a href="{% url 'warden_list' %}" class="{% if 'warden' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-user-shield"></i> Wardens
+        </a>
+        <a href="{% url 'block_list' %}" class="{% if 'block' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-building"></i> Hostel Blocks
+        </a>
+        <a href="/admin/" target="_blank">
+            <i class="fas fa-cog"></i> Admin Panel
+        </a>
+
+        {% else %}
+        <!-- ── WARDEN SIDEBAR ── -->
+        <div class="nav-section-label" style="color:#f59e0b;">🔑 WARDEN</div>
+        <a href="{% url 'student_list' %}" class="{% if 'student' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-users"></i> Students
+        </a>
+        <a href="{% url 'room_list' %}" class="{% if 'room' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-door-open"></i> Rooms
+        </a>
+        <a href="{% url 'complaint_list' %}" class="{% if 'complaint' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-exclamation-circle"></i> Complaints
+        </a>
+        <a href="{% url 'attendance_list' %}" {% if request.resolver_match.url_name == 'attendance_list' or request.resolver_match.url_name == 'attendance_report' %}class="active"{% endif %}>
+            <i class="fas fa-clipboard-check"></i> Attendance
+        </a>
+        <a href="{% url 'notice_list' %}" class="{% if 'notice' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-bullhorn"></i> Notices
+        </a>
+        <a href="{% url 'inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' or request.resolver_match.url_name == 'chat' %}active{% endif %}" style="justify-content:space-between;">
+            <span><i class="fas fa-comments"></i> Messages</span>
+            <span id="adminMsgBadge" style="display:none;background:#e94560;color:#fff;font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:20px;"></span>
+        </a>
+        <a href="{% url 'warden_inbox' %}" class="{% if request.resolver_match.url_name == 'warden_inbox' or request.resolver_match.url_name == 'warden_chat' %}active{% endif %}">
+            <i class="fas fa-comment-dots"></i> Message Admin
+        </a>
+        <a href="{% url 'leave_list' %}" class="{% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-calendar-alt"></i> Leave Requests
+        </a>
+        <a href="{% url 'rules_list' %}" class="{% if 'rule' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-book"></i> Hostel Rules
+        </a>
+        <a href="{% url 'gallery' %}" class="{% if 'gallery' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-images"></i> Gallery
+        </a>
+        {% endif %}
+
+        {% else %}
+        <!-- ── STUDENT SIDEBAR ── -->
+        <div class="nav-section-label">My Hostel</div>
+        <a href="{% url 'room_list' %}" class="{% if 'room' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-door-open"></i> Rooms
+        </a>
+        <a href="{% url 'complaint_list' %}" class="{% if 'complaint' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-exclamation-circle"></i> Complaints
+        </a>
+        <a href="{% url 'attendance_list' %}" {% if request.resolver_match.url_name == 'attendance_list' %}class="active"{% endif %}>
+            <i class="fas fa-clipboard-check"></i> Attendance
+        </a>
+        <a href="{% url 'notice_list' %}" class="{% if 'notice' in request.resolver_match.url_name %}active{% endif %}" style="justify-content:space-between;">
+            <span><i class="fas fa-bullhorn"></i> Notices</span>
+            {% if unread_notice_count > 0 %}
+            <span style="background:#e94560;color:#fff;font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:20px;min-width:20px;text-align:center;">{{ unread_notice_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{% url 'chat' request.user.student_profile.id %}" class="{% if request.resolver_match.url_name == 'chat' %}active{% endif %}" style="justify-content:space-between;">
+            <span><i class="fas fa-comments"></i> Messages</span>
+            <span id="studentMsgBadge" style="display:none;background:#e94560;color:#fff;font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:20px;"></span>
+        </a>
+        <a href="{% url 'leave_list' %}" class="{% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-calendar-alt"></i> My Leaves
+        </a>
+        <a href="{% url 'rules_list' %}" class="{% if 'rule' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-book"></i> Hostel Rules
+        </a>
+        <a href="{% url 'gallery' %}" class="{% if 'gallery' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-images"></i> Gallery
+        </a>
+        <a href="{% url 'document_list' %}" class="{% if 'document' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-file-alt"></i> My Documents
+        </a>
+        <a href="{% url 'profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <i class="fas fa-user"></i> My Profile
+        </a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.25);text-align:center;">HostelHub v1.0</div>
+    </div>
+</div>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="main-content">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- ── TOPBAR ── -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <button id="sidebarToggle" onclick="toggleSidebar()"
+                style="background:none;border:none;font-size:1.3rem;color:#1a1a2e;cursor:pointer;padding:4px;line-height:1;">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h5>{% block page_title %}Dashboard{% endblock %}</h5>
+        </div>
+
+        <div class="topbar-right">
+            {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
+            <button class="export-topbar-btn" onclick="document.getElementById('exportModal').style.display='flex'" title="Export Data">
+                <i class="fas fa-download"></i>
+                <span class="btn-label">Export</span>
+            </button>
+            {% endif %}
+
+            <div style="position:relative;">
+                <a href="{% url 'notifications_list' %}" class="topbar-icon-btn" title="Notifications">🔔</a>
+                <span id="notifBadge"
+                    style="display:none;position:absolute;top:-4px;right:-4px;background:#e94560;color:#fff;
+                           font-size:0.62rem;font-weight:700;padding:1px 5px;border-radius:20px;min-width:16px;text-align:center;">
+                </span>
+            </div>
+
+            {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+            <a href="{% url 'profile' %}" style="text-decoration:none;">
+            {% else %}
+            <a href="{% url 'admin_profile' %}" style="text-decoration:none;">
+            {% endif %}
+                <div class="user-badge">
+                    {% if user.is_authenticated and not user.is_staff and not user.is_superuser %}
+                        {% with profile=user.student_profile %}
+                        {% if profile.profile_photo %}
+                        <img src="{{ profile.profile_photo.url }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #e94560;">
+                        {% else %}
+                        <div class="avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                        {% endif %}
+                        {% endwith %}
+                    {% else %}
+                    <div class="avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                    {% endif %}
+                    <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                    {% if user.is_staff or user.is_superuser %}
+                    <span class="badge-admin hide-mobile">Staff</span>
+                    {% endif %}
+                </div>
+            </a>
+
+            <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit"
+                   style="display:flex;align-items:center;gap:6px;background:#fff0f3;color:#e94560;
+                          padding:7px 12px;border-radius:8px;font-size:0.82rem;cursor:pointer;
+                          font-weight:700;border:1.5px solid rgba(233,69,96,0.2);transition:all 0.2s;
+                          flex-shrink:0;font-family:'Sora',sans-serif;"
+                   onmouseover="this.style.background='#e94560';this.style.color='#fff'"
+                   onmouseout="this.style.background='#fff0f3';this.style.color='#e94560'">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="signout-text">Sign Out</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="content-area">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+{% else %}
+{% block public_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleSidebar() {
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    var isOpen  = sidebar.classList.toggle('open');
+    overlay.classList.toggle('show', isOpen);
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+}
+document.querySelectorAll('.sidebar-nav a').forEach(function(link) {
+    link.addEventListener('click', function() {
+        if (window.innerWidth <= 768) closeSidebar();
+    });
+});
+</script>
+
+{% if user.is_authenticated %}
+<script>
+function updateMsgBadge() {
+    fetch('/chat/unread/')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        var badge = document.getElementById('adminMsgBadge') || document.getElementById('studentMsgBadge');
+        if (badge) { badge.textContent = data.count; badge.style.display = data.count > 0 ? 'inline' : 'none'; }
+    }).catch(function(){});
+}
+function updateNotifBadge() {
+    fetch('/notifications/unread/')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        var badge = document.getElementById('notifBadge');
+        if (badge) { badge.textContent = data.count; badge.style.display = data.count > 0 ? 'inline' : 'none'; }
+    }).catch(function(){});
+}
+updateMsgBadge();
+updateNotifBadge();
+setInterval(updateMsgBadge, 15000);
+setInterval(updateNotifBadge, 15000);
+</script>
+{% endif %}
+
+{% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
+<div id="exportModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);
+            z-index:9999;align-items:center;justify-content:center;padding:16px;"
+     onclick="if(event.target===this) this.style.display='none'">
+    <div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:500px;
+                box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+                <h4 style="font-weight:800;color:#1a1a2e;margin:0;">📥 Export Data</h4>
+                <p style="color:#6c757d;font-size:0.82rem;margin:4px 0 0;">Choose what to export and format</p>
+            </div>
+            <button onclick="document.getElementById('exportModal').style.display='none'"
+                style="background:#f0f4ff;border:none;border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;color:#6c757d;">✕</button>
+        </div>
+        <p style="font-weight:700;font-size:0.78rem;color:#1a1a2e;margin-bottom:10px;letter-spacing:0.5px;">STEP 1 — SELECT DATA</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+            <div onclick="selectType('students',this)" id="type_students" style="border:2px solid #e94560;background:#fff5f7;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <span style="font-size:1.3rem;">👥</span><span style="font-weight:600;font-size:0.85rem;color:#1a1a2e;">Students</span>
+            </div>
+            <div onclick="selectType('allotments',this)" id="type_allotments" style="border:2px solid #e0e0e0;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <span style="font-size:1.3rem;">🔑</span><span style="font-weight:600;font-size:0.85rem;color:#1a1a2e;">Allotments</span>
+            </div>
+            <div onclick="selectType('complaints',this)" id="type_complaints" style="border:2px solid #e0e0e0;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <span style="font-size:1.3rem;">📢</span><span style="font-weight:600;font-size:0.85rem;color:#1a1a2e;">Complaints</span>
+            </div>
+            <div onclick="selectType('staff',this)" id="type_staff" style="border:2px solid #e0e0e0;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <span style="font-size:1.3rem;">👔</span><span style="font-weight:600;font-size:0.85rem;color:#1a1a2e;">Staff</span>
+            </div>
+        </div>
+        <p style="font-weight:700;font-size:0.78rem;color:#1a1a2e;margin-bottom:10px;letter-spacing:0.5px;">STEP 2 — SELECT FORMAT</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;">
+            <div onclick="selectFormat('excel',this)" id="fmt_excel" style="border:2px solid #e94560;background:#fff5f7;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <span style="font-size:1.3rem;">📊</span>
+                <div><div style="font-weight:700;font-size:0.85rem;color:#1a1a2e;">Excel</div><div style="font-size:0.72rem;color:#6c757d;">.xlsx file</div></div>
+            </div>
+            <div onclick="selectFormat('pdf',this)" id="fmt_pdf" style="border:2px solid #e0e0e0;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <span style="font-size:1.3rem;">📄</span>
+                <div><div style="font-weight:700;font-size:0.85rem;color:#1a1a2e;">PDF</div><div style="font-size:0.72rem;color:#6c757d;">.pdf file</div></div>
+            </div>
+        </div>
+        <a id="exportDownloadBtn" href="/export/?type=students&format=excel"
+           style="display:block;text-align:center;background:linear-gradient(135deg,#e94560,#c73652);
+                  color:#fff;text-decoration:none;border-radius:12px;padding:14px;
+                  font-weight:700;font-size:0.95rem;"
+           onclick="document.getElementById('exportModal').style.display='none'">
+            📊 Download Excel — Students
+        </a>
+    </div>
+</div>
+<script>
+var _exportType='students', _exportFormat='excel';
+var _typeLabels={students:'Students',allotments:'Allotments',complaints:'Complaints',staff:'Staff'};
+function selectType(val,el){
+    _exportType=val;
+    ['students','allotments','complaints','staff'].forEach(function(t){
+        var d=document.getElementById('type_'+t);d.style.borderColor='#e0e0e0';d.style.background='#fff';
+    });
+    el.style.borderColor='#e94560';el.style.background='#fff5f7';updateExportBtn();
+}
+function selectFormat(val,el){
+    _exportFormat=val;
+    ['excel','pdf'].forEach(function(f){
+        var d=document.getElementById('fmt_'+f);d.style.borderColor='#e0e0e0';d.style.background='#fff';
+    });
+    el.style.borderColor='#e94560';el.style.background='#fff5f7';updateExportBtn();
+}
+function updateExportBtn(){
+    var icon=_exportFormat==='excel'?'📊':'📄';
+    var fmtLbl=_exportFormat==='excel'?'Excel':'PDF';
+    var btn=document.getElementById('exportDownloadBtn');
+    btn.href='/export/?type='+_exportType+'&format='+_exportFormat;
+    btn.innerHTML=icon+' Download '+fmtLbl+' — '+_typeLabels[_exportType];
+}
+</script>
+{% endif %}
+
+</body>
+</html>

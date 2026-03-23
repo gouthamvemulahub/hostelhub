@@ -1,0 +1,84 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}{{ title }}
+<style>
+@media (max-width: 768px) {
+    [style*="max-width"] { max-width: 100% !important; width: 100% !important; }
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    [style*="display:grid"] { grid-template-columns: 1fr !important; }
+    [style*="display:flex"] { flex-wrap: wrap !important; }
+    table { min-width: 500px; }
+    input, select, textarea { font-size: 16px !important; }
+    .col-md-4, .col-md-6, .col-lg-8 { padding: 4px 0; }
+    .card { margin-bottom: 12px; }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">{{ title }}</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Room Number</label>
+                            {{ form.room_number }}
+                            {% for e in form.room_number.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Floor</label>
+                            {{ form.floor }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Room Type</label>
+                            {{ form.room_type }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Capacity (beds)</label>
+                            {{ form.capacity }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Monthly Fee (₹)</label>
+                            {{ form.monthly_fee }}
+                        </div>
+                      <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Block</label>
+                            {% if is_warden %}
+                                {% if warden_block %}
+                                <input type="text" class="form-control"
+                                       value="{{ warden_block.name }}" disabled>
+                                <small class="text-muted">Auto-assigned to your block</small>
+                                {% else %}
+                                <input type="text" class="form-control"
+                                       value="No block assigned" disabled>
+                                {% endif %}
+                            {% else %}
+                                {{ form.block }}
+                            {% endif %}
+                        </div>  
+                        <div class="col-12">
+                            <label class="form-label">Amenities</label>
+                            {{ form.amenities }}
+                            <small class="text-muted">Comma separated, e.g. WiFi, AC, Attached Bathroom</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'room_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">{{ title }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

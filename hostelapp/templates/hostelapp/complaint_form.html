@@ -1,0 +1,51 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}File a Complaint
+<style>
+@media (max-width: 768px) {
+    [style*="max-width"] { max-width: 100% !important; width: 100% !important; }
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    [style*="display:grid"] { grid-template-columns: 1fr !important; }
+    [style*="display:flex"] { flex-wrap: wrap !important; }
+    table { min-width: 500px; }
+    input, select, textarea { font-size: 16px !important; }
+    .col-md-4, .col-md-6, .col-lg-8 { padding: 4px 0; }
+    .card { margin-bottom: 12px; }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">New Complaint / Maintenance Request</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            {{ form.category }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Priority</label>
+                            {{ form.priority }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Title</label>
+                            {{ form.title }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'complaint_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

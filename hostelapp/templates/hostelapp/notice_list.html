@@ -1,0 +1,165 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Notice Board
+<style>
+@media (max-width: 768px) {
+    [style*="max-width"] { max-width: 100% !important; width: 100% !important; }
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    [style*="display:grid"] { grid-template-columns: 1fr !important; }
+    [style*="display:flex"] { flex-wrap: wrap !important; }
+    table { min-width: 500px; }
+    input, select, textarea { font-size: 16px !important; }
+    .col-md-4, .col-md-6, .col-lg-8 { padding: 4px 0; }
+    .card { margin-bottom: 12px; }
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-start">
+    <div>
+        <h2>Notice Board</h2>
+        <p>Important announcements from the hostel administration.</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if not is_admin and unread_notice_count > 0 %}
+        <form method="post" action="{% url 'notice_mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-check-double me-2"></i>Mark All Read
+            </button>
+        </form>
+        {% endif %}
+        {% if is_admin %}
+        <a href="{% url 'notice_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Post Notice
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if notices %}
+<div class="row g-4">
+    {% for notice in notices %}
+    <div class="col-12">
+        <div class="card" style="border-left:4px solid {% if notice.priority == 'urgent' %}#e94560{% else %}#3b82f6{% endif %};{% if not is_admin and notice.id in unread_ids %}background:#fffdf5;{% endif %}">
+            <div class="card-body">
+
+                <!-- Header Row -->
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;{% if notice.priority == 'urgent' %}background:rgba(233,69,96,0.12);color:#e94560;{% else %}background:rgba(59,130,246,0.12);color:#3b82f6;{% endif %}">
+                            {% if notice.priority == 'urgent' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                            {% else %}
+                            <i class="fas fa-bullhorn"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                <h5 style="margin:0;font-weight:700;color:#1a1a2e;">{{ notice.title }}</h5>
+                                {% if notice.priority == 'urgent' %}
+                                <span style="background:rgba(233,69,96,0.12);color:#e94560;padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">
+                                    <i class="fas fa-bolt me-1"></i>URGENT
+                                </span>
+                                {% else %}
+                                <span style="background:rgba(59,130,246,0.12);color:#3b82f6;padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">
+                                    NORMAL
+                                </span>
+                                {% endif %}
+                                {% if not is_admin and notice.id in unread_ids %}
+                                <span style="background:#fef3c7;color:#d97706;padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">
+                                    <i class="fas fa-circle me-1" style="font-size:0.5rem;"></i>UNREAD
+                                </span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                Posted by {{ notice.posted_by.get_full_name|default:notice.posted_by.username }}
+                                &nbsp;·&nbsp; {{ notice.created_at|date:"d M Y, H:i" }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 align-items-center">
+                        {% if not is_admin and notice.id in unread_ids %}
+                        <form method="post" action="{% url 'notice_mark_read' notice.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-check me-1"></i>Mark Read
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if is_admin %}
+                        <a href="{% url 'notice_edit' notice.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="post" action="{% url 'notice_delete' notice.pk %}" style="display:inline;"
+                              onsubmit="return confirm('Remove this notice?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Notice Text -->
+                <p style="color:#444;line-height:1.7;font-size:0.93rem;margin-bottom:{% if notice.photo %}14px{% else %}0{% endif %};">
+                    {{ notice.content }}
+                </p>
+
+                <!-- Notice Photo -->
+                {% if notice.photo %}
+                <div style="margin-top:4px;">
+                    <img src="{{ notice.photo.url }}" alt="Notice photo"
+                        style="max-width:100%;max-height:360px;width:auto;border-radius:12px;object-fit:cover;border:1px solid #eee;cursor:pointer;"
+                        onclick="openLightbox(this.src)">
+                    <div style="font-size:0.75rem;color:#aaa;margin-top:5px;">
+                        <i class="fas fa-image me-1"></i>Click image to enlarge
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()"
+    style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
+    <img id="lightbox-img" style="max-width:92%;max-height:90vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+    <div style="position:absolute;top:20px;right:28px;color:#fff;font-size:1.8rem;cursor:pointer;" onclick="closeLightbox()">
+        <i class="fas fa-times"></i>
+    </div>
+</div>
+
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="fas fa-bullhorn fa-3x mb-3" style="color:#ddd;"></i>
+        <p>No notices posted yet.</p>
+        {% if is_admin %}
+        <a href="{% url 'notice_add' %}" class="btn btn-primary mt-2">Post First Notice</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+function openLightbox(src) {
+    document.getElementById('lightbox-img').src = src;
+    const lb = document.getElementById('lightbox');
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+</script>
+
+{% endblock %}

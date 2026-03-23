@@ -1,0 +1,124 @@
+{% extends 'hostelapp/base.html' %}
+{% block public_content %}
+
+<div style="min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+
+        <!-- Icon -->
+        <div style="text-align:center;margin-bottom:24px;">
+            <div style="width:72px;height:72px;background:rgba(233,69,96,0.1);border:2px solid rgba(233,69,96,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 16px;">
+                📧
+            </div>
+            <h3 style="font-weight:800;color:#1a1a2e;margin:0;">Verify Your Email</h3>
+            <p style="color:#888;font-size:0.88rem;margin-top:8px;">
+                We sent a 6-digit OTP to<br>
+                <strong style="color:#e94560;">{{ email }}</strong>
+            </p>
+        </div>
+
+        <!-- Messages -->
+        {% for message in messages %}
+        <div style="padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:0.85rem;
+            {% if message.tags == 'error' %}background:rgba(233,69,96,0.1);color:#e94560;border:1px solid rgba(233,69,96,0.2);
+            {% else %}background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+
+        <!-- OTP Form -->
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify">
+
+            <label style="font-weight:600;font-size:0.82rem;color:#333;margin-bottom:8px;display:block;">Enter OTP</label>
+
+            <!-- OTP boxes -->
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;" id="otp-boxes">
+                <input type="text" maxlength="1" class="otp-box" style="width:52px;height:60px;border:2px solid #e0e0e0;border-radius:12px;text-align:center;font-size:1.6rem;font-weight:700;color:#1a1a2e;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" style="width:52px;height:60px;border:2px solid #e0e0e0;border-radius:12px;text-align:center;font-size:1.6rem;font-weight:700;color:#1a1a2e;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" style="width:52px;height:60px;border:2px solid #e0e0e0;border-radius:12px;text-align:center;font-size:1.6rem;font-weight:700;color:#1a1a2e;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" style="width:52px;height:60px;border:2px solid #e0e0e0;border-radius:12px;text-align:center;font-size:1.6rem;font-weight:700;color:#1a1a2e;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" style="width:52px;height:60px;border:2px solid #e0e0e0;border-radius:12px;text-align:center;font-size:1.6rem;font-weight:700;color:#1a1a2e;outline:none;transition:border-color 0.2s;">
+                <input type="text" maxlength="1" class="otp-box" style="width:52px;height:60px;border:2px solid #e0e0e0;border-radius:12px;text-align:center;font-size:1.6rem;font-weight:700;color:#1a1a2e;outline:none;transition:border-color 0.2s;">
+            </div>
+
+            <!-- Hidden combined input -->
+            <input type="hidden" name="otp" id="otp-combined">
+
+            <!-- Countdown timer -->
+            <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:0.82rem;color:#888;">OTP expires in </span>
+                <span id="timer" style="font-weight:700;color:#e94560;">10:00</span>
+            </div>
+
+            <button type="submit" onclick="combineOtp()"
+                style="width:100%;padding:14px;background:linear-gradient(135deg,#e94560,#c73652);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity 0.2s;">
+                ✅ Verify & Create Account
+            </button>
+        </form>
+
+        <!-- Resend -->
+        <form method="post" style="margin-top:16px;text-align:center;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="resend">
+            <span style="font-size:0.85rem;color:#888;">Didn't receive it? </span>
+            <button type="submit" id="resend-btn"
+                style="background:none;border:none;color:#e94560;font-weight:700;cursor:pointer;font-size:0.85rem;padding:0;">
+                Resend OTP
+            </button>
+        </form>
+
+        <!-- Back to register -->
+        <div style="text-align:center;margin-top:20px;">
+            <a href="{% url 'register' %}" style="font-size:0.82rem;color:#aaa;text-decoration:none;">
+                ← Back to Registration
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Auto-focus and auto-advance OTP boxes
+const boxes = document.querySelectorAll('.otp-box');
+boxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+        box.style.borderColor = box.value ? '#e94560' : '#e0e0e0';
+        if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+    });
+    box.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+    });
+    box.addEventListener('paste', e => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        pasted.split('').forEach((ch, j) => { if (boxes[j]) { boxes[j].value = ch; boxes[j].style.borderColor = '#e94560'; } });
+        if (boxes[pasted.length - 1]) boxes[pasted.length - 1].focus();
+    });
+});
+boxes[0].focus();
+
+function combineOtp() {
+    document.getElementById('otp-combined').value = Array.from(boxes).map(b => b.value).join('');
+}
+
+// Countdown timer
+let seconds = 10 * 60;
+const timerEl = document.getElementById('timer');
+const interval = setInterval(() => {
+    seconds--;
+    if (seconds <= 0) {
+        clearInterval(interval);
+        timerEl.textContent = 'Expired';
+        timerEl.style.color = '#aaa';
+        return;
+    }
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    timerEl.textContent = m + ':' + s;
+    if (seconds < 60) timerEl.style.color = '#f59e0b';
+}, 1000);
+</script>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}

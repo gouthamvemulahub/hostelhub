@@ -1,0 +1,190 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Hostel Blocks{% endblock %}
+{% block content %}
+
+<style>
+@media (max-width: 768px) {
+    .block-grid { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">🏢 Hostel Blocks</h4>
+        <p style="color:#6c757d;font-size:0.85rem;margin:4px 0 0;">Manage boys and girls hostel blocks</p>
+    </div>
+    {% if request.user.is_superuser %}
+    <a href="{% url 'block_add' %}"
+       style="background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:10px;
+              text-decoration:none;font-weight:600;font-size:0.88rem;">
+        + Add Block
+    </a>
+    {% endif %}
+</div>
+
+<!-- Boys Blocks -->
+<div style="margin-bottom:32px;">
+    <h5 style="color:#0f3460;font-weight:700;margin-bottom:16px;">
+        🔵 Boys Hostel Blocks
+    </h5>
+    <div class="block-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+        {% for block in boys_blocks %}
+        <div style="background:#fff;border-radius:16px;padding:20px;
+                    box-shadow:0 2px 12px rgba(0,0,0,0.06);
+                    border-top:4px solid #0f3460;">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+                <div>
+                    <h6 style="font-weight:800;color:#1a1a2e;margin:0;font-size:1rem;">{{ block.name }}</h6>
+                    <span style="background:rgba(15,52,96,0.1);color:#0f3460;
+                                 padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">
+                        Boys Hostel
+                    </span>
+                </div>
+                {% if request.user.is_superuser %}
+                <div style="display:flex;gap:6px;">
+                    <a href="{% url 'block_edit' block.pk %}"
+                       style="background:#f0f4ff;color:#0f3460;padding:5px 10px;
+                              border-radius:8px;font-size:0.75rem;text-decoration:none;font-weight:600;">
+                        Edit
+                    </a>
+                    <form method="post" action="{% url 'block_delete' block.pk %}"
+                          onsubmit="return confirm('Delete {{ block.name }}?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                style="background:#fff0f3;color:#e94560;padding:5px 10px;
+                                       border-radius:8px;font-size:0.75rem;border:none;cursor:pointer;font-weight:600;">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Stats -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+                <div style="background:#f8f9ff;border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-weight:700;color:#1a1a2e;font-size:1.1rem;">{{ block.total_rooms }}</div>
+                    <div style="font-size:0.68rem;color:#6c757d;">Rooms</div>
+                </div>
+                <div style="background:#f8f9ff;border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-weight:700;color:#10b981;font-size:1.1rem;">{{ block.available_rooms }}</div>
+                    <div style="font-size:0.68rem;color:#6c757d;">Available</div>
+                </div>
+                <div style="background:#f8f9ff;border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-weight:700;color:#e94560;font-size:1.1rem;">{{ block.total_students }}</div>
+                    <div style="font-size:0.68rem;color:#6c757d;">Students</div>
+                </div>
+            </div>
+
+            {% if block.description %}
+            <p style="font-size:0.80rem;color:#6c757d;margin-bottom:12px;">{{ block.description }}</p>
+            {% endif %}
+
+            <div style="font-size:0.78rem;color:#6c757d;margin-bottom:12px;">
+                🏢 {{ block.total_floors }} Floor{{ block.total_floors|pluralize }}
+                {% if block.warden %}
+                · 👤 {{ block.warden.get_full_name|default:block.warden.username }}
+                {% endif %}
+            </div>
+
+            <a href="{% url 'block_detail' block.pk %}"
+               style="display:block;text-align:center;background:#0f3460;color:#fff;
+                      padding:8px;border-radius:8px;text-decoration:none;
+                      font-size:0.82rem;font-weight:600;">
+                View Details →
+            </a>
+        </div>
+        {% empty %}
+        <div style="color:#aaa;padding:40px;text-align:center;grid-column:1/-1;">
+            No boys blocks yet.
+            {% if request.user.is_superuser %}
+            <a href="{% url 'block_add' %}">Add one</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Girls Blocks -->
+<div>
+    <h5 style="color:#e94560;font-weight:700;margin-bottom:16px;">
+        🔴 Girls Hostel Blocks
+    </h5>
+    <div class="block-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+        {% for block in girls_blocks %}
+        <div style="background:#fff;border-radius:16px;padding:20px;
+                    box-shadow:0 2px 12px rgba(0,0,0,0.06);
+                    border-top:4px solid #e94560;">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+                <div>
+                    <h6 style="font-weight:800;color:#1a1a2e;margin:0;font-size:1rem;">{{ block.name }}</h6>
+                    <span style="background:rgba(233,69,96,0.1);color:#e94560;
+                                 padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">
+                        Girls Hostel
+                    </span>
+                </div>
+                {% if request.user.is_superuser %}
+                <div style="display:flex;gap:6px;">
+                    <a href="{% url 'block_edit' block.pk %}"
+                       style="background:#fff5f7;color:#e94560;padding:5px 10px;
+                              border-radius:8px;font-size:0.75rem;text-decoration:none;font-weight:600;">
+                        Edit
+                    </a>
+                    <form method="post" action="{% url 'block_delete' block.pk %}"
+                          onsubmit="return confirm('Delete {{ block.name }}?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                style="background:#f0f0f0;color:#666;padding:5px 10px;
+                                       border-radius:8px;font-size:0.75rem;border:none;cursor:pointer;font-weight:600;">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+                <div style="background:#f8f9ff;border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-weight:700;color:#1a1a2e;font-size:1.1rem;">{{ block.total_rooms }}</div>
+                    <div style="font-size:0.68rem;color:#6c757d;">Rooms</div>
+                </div>
+                <div style="background:#f8f9ff;border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-weight:700;color:#10b981;font-size:1.1rem;">{{ block.available_rooms }}</div>
+                    <div style="font-size:0.68rem;color:#6c757d;">Available</div>
+                </div>
+                <div style="background:#f8f9ff;border-radius:8px;padding:8px;text-align:center;">
+                    <div style="font-weight:700;color:#e94560;font-size:1.1rem;">{{ block.total_students }}</div>
+                    <div style="font-size:0.68rem;color:#6c757d;">Students</div>
+                </div>
+            </div>
+
+            {% if block.description %}
+            <p style="font-size:0.80rem;color:#6c757d;margin-bottom:12px;">{{ block.description }}</p>
+            {% endif %}
+
+            <div style="font-size:0.78rem;color:#6c757d;margin-bottom:12px;">
+                🏢 {{ block.total_floors }} Floor{{ block.total_floors|pluralize }}
+                {% if block.warden %}
+                · 👤 {{ block.warden.get_full_name|default:block.warden.username }}
+                {% endif %}
+            </div>
+
+            <a href="{% url 'block_detail' block.pk %}"
+               style="display:block;text-align:center;background:#e94560;color:#fff;
+                      padding:8px;border-radius:8px;text-decoration:none;
+                      font-size:0.82rem;font-weight:600;">
+                View Details →
+            </a>
+        </div>
+        {% empty %}
+        <div style="color:#aaa;padding:40px;text-align:center;grid-column:1/-1;">
+            No girls blocks yet.
+            {% if request.user.is_superuser %}
+            <a href="{% url 'block_add' %}">Add one</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

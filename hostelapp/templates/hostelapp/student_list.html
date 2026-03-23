@@ -1,0 +1,170 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Students{% endblock %}
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <h2>Students</h2>
+        <p>All registered hostel students.</p>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <!-- Search -->
+            <div class="col-12 col-md-4">
+                <label class="form-label" style="font-size:0.78rem;font-weight:600;">Search</label>
+                <input type="text" name="q" value="{{ query }}" class="form-control"
+                       placeholder="Name, roll number, course, email...">
+            </div>
+
+            <!-- Hostel Type Filter -->
+            <div class="col-6 col-md-2">
+                <label class="form-label" style="font-size:0.78rem;font-weight:600;">Hostel Type</label>
+                <select name="hostel_type" class="form-control">
+                    <option value="">All</option>
+                    <option value="boys"  {% if hostel_type_filter == 'boys'  %}selected{% endif %}>🔵 Boys</option>
+                    <option value="girls" {% if hostel_type_filter == 'girls' %}selected{% endif %}>🔴 Girls</option>
+                </select>
+            </div>
+
+            <!-- Block Filter -->
+            <div class="col-6 col-md-3">
+                <label class="form-label" style="font-size:0.78rem;font-weight:600;">Block</label>
+                <select name="block" class="form-control">
+                    <option value="">All Blocks</option>
+                    {% for b in blocks %}
+                    <option value="{{ b.id }}" {% if block_filter == b.id|stringformat:"s" %}selected{% endif %}>
+                        {{ b.name }} ({{ b.get_block_type_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Buttons -->
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Filter
+                </button>
+                <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Student Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div style="overflow-x:auto;">
+            <table class="table mb-0" style="min-width:700px;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Roll Number</th>
+                        <th>Course / Year</th>
+                        <th>Hostel</th>
+                        <th>Block</th>
+                        <th>Phone</th>
+                        <th>Room</th>
+                        <th>Gender</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if student.profile_photo %}
+                                <img src="{{ student.profile_photo.url }}"
+                                     style="width:36px;height:36px;border-radius:8px;object-fit:cover;border:2px solid #e94560;flex-shrink:0;">
+                                {% else %}
+                                <div style="width:36px;height:36px;background:#e94560;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.85rem;font-weight:700;flex-shrink:0;">
+                                    {{ student.user.first_name|first|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <strong style="font-size:0.88rem;">{{ student.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ student.user.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code>{{ student.roll_number }}</code></td>
+                        <td>{{ student.course }}, Year {{ student.year_of_study }}</td>
+                        <td>
+                            {% if student.hostel_type == 'boys' %}
+                            <span style="background:rgba(15,52,96,0.1);color:#0f3460;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">🔵 Boys</span>
+                            {% elif student.hostel_type == 'girls' %}
+                            <span style="background:rgba(233,69,96,0.1);color:#e94560;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">🔴 Girls</span>
+                            {% else %}
+                            <span style="color:#aaa;font-size:0.78rem;">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if student.block %}
+                            <span style="background:#f0f4ff;color:#1a1a2e;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">
+                                🏢 {{ student.block.name }}
+                            </span>
+                            {% else %}
+                            <span style="color:#aaa;font-size:0.78rem;">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size:0.85rem;">{{ student.phone }}</td>
+                        <td>
+                            {% with allotment=student.allotments.all %}
+                            {% for a in allotment %}
+                            {% if a.is_active %}
+                            <a href="{% url 'room_detail' a.room.pk %}"
+                               style="color:#e94560;font-weight:600;font-size:0.85rem;">
+                                Room {{ a.room.room_number }}
+                            </a>
+                            {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                        </td>
+                        <td style="font-size:0.85rem;">{{ student.get_gender_display }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fas fa-users fa-2x mb-2" style="color:#ddd;display:block;"></i>
+                            No students found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div style="display:flex;justify-content:center;gap:8px;margin-top:20px;flex-wrap:wrap;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if hostel_type_filter %}&hostel_type={{ hostel_type_filter }}{% endif %}{% if block_filter %}&block={{ block_filter }}{% endif %}"
+       style="padding:8px 16px;border-radius:8px;background:#fff;border:1px solid #e0e0e0;text-decoration:none;color:#1a1a2e;font-weight:600;font-size:0.85rem;">← Previous</a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+    <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if hostel_type_filter %}&hostel_type={{ hostel_type_filter }}{% endif %}{% if block_filter %}&block={{ block_filter }}{% endif %}"
+       style="padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85rem;
+              {% if page_obj.number == num %}background:#e94560;color:#fff;{% else %}background:#fff;border:1px solid #e0e0e0;color:#1a1a2e;{% endif %}">
+        {{ num }}
+    </a>
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if hostel_type_filter %}&hostel_type={{ hostel_type_filter }}{% endif %}{% if block_filter %}&block={{ block_filter }}{% endif %}"
+       style="padding:8px 16px;border-radius:8px;background:#fff;border:1px solid #e0e0e0;text-decoration:none;color:#1a1a2e;font-weight:600;font-size:0.85rem;">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+@media (max-width: 768px) {
+    table { min-width: 600px; }
+}
+</style>
+{% endblock %}

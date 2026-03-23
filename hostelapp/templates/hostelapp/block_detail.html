@@ -1,0 +1,150 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}{{ hostel_block.name }}{% endblock %}
+{% block content %}
+
+<style>
+@media (max-width: 768px) {
+    .detail-grid { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<!-- Header -->
+<div style="display:flex;justify-content:space-between;align-items:center;
+            margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <a href="{% url 'block_list' %}"
+           style="color:#6c757d;font-size:0.82rem;text-decoration:none;">← Back to Blocks</a>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:4px 0 0;">
+            🏢 {{ hostel_block.name }}
+            <span style="font-size:0.75rem;padding:3px 10px;border-radius:20px;margin-left:8px;
+                         {% if hostel_block.block_type == 'boys' %}
+                         background:rgba(15,52,96,0.1);color:#0f3460;
+                         {% else %}
+                         background:rgba(233,69,96,0.1);color:#e94560;
+                         {% endif %}">
+                {{ hostel_block.get_block_type_display }}
+            </span>
+        </h4>
+        <p style="color:#6c757d;font-size:0.85rem;margin:4px 0 0;">
+            {{ hostel_block.total_floors }} Floor{{ hostel_block.total_floors|pluralize }}
+            {% if hostel_block.warden %}
+            · Warden: {{ hostel_block.warden.get_full_name|default:hostel_block.warden.username }}
+            {% endif %}
+        </p>
+    </div>
+    {% if request.user.is_superuser %}
+    <a href="{% url 'block_edit' hostel_block.id %}"
+       style="background:#1a1a2e;color:#fff;padding:10px 20px;
+              border-radius:10px;text-decoration:none;font-weight:600;font-size:0.88rem;">
+        Edit Block
+    </a>
+    {% endif %}
+</div>
+
+<!-- Stats -->
+<div class="detail-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+    <div style="background:#fff;border-radius:12px;padding:20px;text-align:center;
+                box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+        <div style="font-size:1.8rem;font-weight:700;color:#1a1a2e;">{{ hostel_block.total_rooms }}</div>
+        <div style="font-size:0.8rem;color:#6c757d;">Total Rooms</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:20px;text-align:center;
+                box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+        <div style="font-size:1.8rem;font-weight:700;color:#10b981;">{{ hostel_block.available_rooms }}</div>
+        <div style="font-size:0.8rem;color:#6c757d;">Available Rooms</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:20px;text-align:center;
+                box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+        <div style="font-size:1.8rem;font-weight:700;color:#e94560;">{{ hostel_block.total_students }}</div>
+        <div style="font-size:0.8rem;color:#6c757d;">Students</div>
+    </div>
+</div>
+
+<!-- Rooms -->
+<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);
+            overflow:hidden;margin-bottom:24px;">
+    <div style="background:#1a1a2e;padding:14px 20px;">
+        <span style="color:#fff;font-weight:700;">🚪 Rooms in {{ hostel_block.name }}</span>
+    </div>
+    <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+            <thead>
+                <tr style="background:#f8f9ff;">
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Room</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Floor</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Type</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Capacity</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Occupied</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                <tr style="border-top:1px solid #f5f5f5;">
+                    <td style="padding:12px 16px;font-weight:600;">
+                        <a href="{% url 'room_detail' room.pk %}"
+                           style="color:#1a1a2e;text-decoration:none;">{{ room.room_number }}</a>
+                    </td>
+                    <td style="padding:12px 16px;color:#6c757d;">{{ room.floor }}</td>
+                    <td style="padding:12px 16px;">{{ room.get_room_type_display }}</td>
+                    <td style="padding:12px 16px;">{{ room.capacity }}</td>
+                    <td style="padding:12px 16px;">{{ room.current_occupancy }}</td>
+                    <td style="padding:12px 16px;">
+                        <span style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;
+                            {% if room.status == 'available' %}background:rgba(16,185,129,0.1);color:#059669;
+                            {% elif room.status == 'full' %}background:rgba(233,69,96,0.1);color:#e94560;
+                            {% else %}background:rgba(245,158,11,0.1);color:#d97706;{% endif %}">
+                            {{ room.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding:40px;text-align:center;color:#aaa;">
+                        No rooms assigned to this block yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Students -->
+<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;">
+    <div style="background:#1a1a2e;padding:14px 20px;">
+        <span style="color:#fff;font-weight:700;">👥 Students in {{ hostel_block.name }}</span>
+    </div>
+    <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+            <thead>
+                <tr style="background:#f8f9ff;">
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Name</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Roll No</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Course</th>
+                    <th style="padding:12px 16px;text-align:left;color:#6c757d;font-size:0.75rem;">Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr style="border-top:1px solid #f5f5f5;">
+                    <td style="padding:12px 16px;font-weight:600;">
+                        {{ student.user.get_full_name|default:student.user.username }}
+                    </td>
+                    <td style="padding:12px 16px;color:#6c757d;">{{ student.roll_number }}</td>
+                    <td style="padding:12px 16px;">{{ student.course }}</td>
+                    <td style="padding:12px 16px;">Year {{ student.year_of_study }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding:40px;text-align:center;color:#aaa;">
+                        No students assigned to this block yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

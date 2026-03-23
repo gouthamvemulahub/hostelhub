@@ -1,0 +1,163 @@
+{% extends 'hostelapp/base.html' %}
+{% block public_content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | HostelHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Sora', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: #fff; border-radius: 24px; padding: 44px 40px; width: 100%; max-width: 440px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+        .brand { text-align: center; margin-bottom: 28px; }
+        .brand h2 { font-weight: 800; font-size: 2rem; letter-spacing: -1px; margin: 0; }
+        .brand h2 span { color: #e94560; }
+        .brand p { color: #6c757d; font-size: 0.85rem; margin: 6px 0 0; }
+
+        /* Role Toggle */
+        .role-toggle { display: flex; background: #f0f4ff; border-radius: 14px; padding: 5px; margin-bottom: 28px; gap: 5px; }
+        .role-btn { flex: 1; padding: 12px 8px; border: none; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.25s; font-family: 'Sora', sans-serif; background: transparent; color: #888; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .role-btn.active { background: #fff; color: #1a1a2e; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+        .role-btn.active.admin { color: #e94560; }
+        .role-btn.active.student { color: #0f3460; }
+        .role-icon { font-size: 1.1rem; }
+
+        /* Role indicator */
+        .role-indicator { text-align: center; margin-bottom: 20px; padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; }
+        .role-indicator.admin   { background: rgba(233,69,96,0.08); color: #e94560; border: 1px solid rgba(233,69,96,0.2); }
+        .role-indicator.student { background: rgba(15,52,96,0.08); color: #0f3460; border: 1px solid rgba(15,52,96,0.2); }
+
+        .form-control { border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.9rem; font-family: 'Sora', sans-serif; transition: all 0.2s; }
+        .form-control:focus { outline: none; box-shadow: none; }
+        .form-control.admin-focus:focus   { border-color: #e94560; box-shadow: 0 0 0 3px rgba(233,69,96,0.1); }
+        .form-control.student-focus:focus { border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+        .form-label { font-weight: 600; font-size: 0.82rem; margin-bottom: 6px; color: #444; }
+
+        .btn-login { width: 100%; padding: 13px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; font-family: 'Sora', sans-serif; transition: all 0.2s; color: #fff; }
+        .btn-login.admin   { background: linear-gradient(135deg, #e94560, #c73652); }
+        .btn-login.student { background: linear-gradient(135deg, #1a1a2e, #0f3460); }
+        .btn-login:hover { transform: translateY(-1px); opacity: 0.92; }
+
+        .forgot-link { text-align: right; margin-top: 8px; margin-bottom: 4px; }
+        .forgot-link a { font-size: 0.8rem; color: #aaa; text-decoration: none; font-weight: 600; }
+        .forgot-link a:hover { color: #e94560; }
+        .divider { text-align: center; color: #ccc; font-size: 0.78rem; margin: 18px 0; position: relative; }
+        .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 42%; height: 1px; background: #eee; }
+        .divider::before { left: 0; } .divider::after { right: 0; }
+        .register-link { text-align: center; font-size: 0.85rem; color: #888; }
+        .register-link a { color: #e94560; font-weight: 700; text-decoration: none; }
+        .alert { border: none; border-radius: 10px; font-size: 0.85rem; padding: 10px 14px; margin-bottom: 16px; }
+        .alert-danger  { background: rgba(233,69,96,0.08); color: #c73652; }
+        .alert-success { background: rgba(16,185,129,0.08); color: #059669; }
+        .alert-info    { background: rgba(59,130,246,0.08); color: #2563eb; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+
+    <!-- Brand -->
+    <div class="brand">
+        <h2><span>Hostel</span>Hub</h2>
+        <p>Sign in to your account</p>
+    </div>
+
+    <!-- Role Toggle -->
+    <div class="role-toggle">
+        <button type="button" class="role-btn admin {% if role == 'admin' %}active{% endif %}"
+                id="btnAdmin" onclick="setRole('admin')">
+            <span class="role-icon">👨‍💼</span> Admin
+        </button>
+        <button type="button" class="role-btn student {% if role != 'admin' %}active{% endif %}"
+                id="btnStudent" onclick="setRole('student')">
+            <span class="role-icon">🎓</span> Student
+        </button>
+    </div>
+
+    <!-- Role Indicator -->
+    <div class="role-indicator {% if role == 'admin' %}admin{% else %}student{% endif %}" id="roleIndicator">
+        {% if role == 'admin' %}
+        👨‍💼 Signing in as <strong>Administrator</strong>
+        {% else %}
+        🎓 Signing in as <strong>Student</strong>
+        {% endif %}
+    </div>
+
+    <!-- Messages -->
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    <!-- Login Form -->
+    <form method="post" id="loginForm">
+        {% csrf_token %}
+        <input type="hidden" name="role" id="roleInput" value="{{ role|default:'student' }}">
+
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" id="usernameInput"
+                   placeholder="Enter your username" required autofocus>
+        </div>
+        <div class="mb-1">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" id="passwordInput"
+                   placeholder="Enter your password" required>
+        </div>
+
+        <div class="forgot-link">
+            <a href="{% url 'password_reset' %}">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn-login {% if role == 'admin' %}admin{% else %}student{% endif %}"
+                id="loginBtn" style="margin-top:12px;">
+            {% if role == 'admin' %}👨‍💼 Sign In as Admin{% else %}🎓 Sign In as Student{% endif %}
+        </button>
+    </form>
+
+    <div class="divider">or</div>
+    <div class="register-link">
+        New student? <a href="{% url 'register' %}">Create an account</a>
+    </div>
+</div>
+
+<script>
+function setRole(role) {
+    var isAdmin = role === 'admin';
+
+    // Update hidden input
+    document.getElementById('roleInput').value = role;
+
+    // Update toggle buttons
+    document.getElementById('btnAdmin').classList.toggle('active', isAdmin);
+    document.getElementById('btnStudent').classList.toggle('active', !isAdmin);
+
+    // Update indicator
+    var indicator = document.getElementById('roleIndicator');
+    indicator.className = 'role-indicator ' + role;
+    indicator.innerHTML = isAdmin
+        ? '👨‍💼 Signing in as <strong>Administrator</strong>'
+        : '🎓 Signing in as <strong>Student</strong>';
+
+    // Update input focus colors
+    var inputs = document.querySelectorAll('.form-control');
+    inputs.forEach(function(inp) {
+        inp.classList.remove('admin-focus', 'student-focus');
+        inp.classList.add(isAdmin ? 'admin-focus' : 'student-focus');
+    });
+
+    // Update button
+    var btn = document.getElementById('loginBtn');
+    btn.className = 'btn-login ' + role;
+    btn.innerHTML = isAdmin ? '👨‍💼 Sign In as Admin' : '🎓 Sign In as Student';
+}
+
+// Initialize on load
+setRole(document.getElementById('roleInput').value || 'student');
+</script>
+</body>
+</html>
+{% endblock %}

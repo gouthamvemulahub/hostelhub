@@ -1,0 +1,113 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+
+<div style="max-width:600px;margin:0 auto;">
+    <div style="background:#fff;border-radius:16px;padding:28px;
+                box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+        <h4 style="font-weight:800;color:#1a1a2e;margin-bottom:24px;">🏢 {{ title }}</h4>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:0.82rem;display:block;margin-bottom:6px;">
+                    Block Name *
+                </label>
+                <input type="text" name="name" required
+                       value="{{ block.name|default:'' }}"
+                       placeholder="e.g. Block A, Block B"
+                       style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;
+                              border-radius:8px;font-size:0.88rem;outline:none;
+                              font-family:'Sora',sans-serif;"
+                       onfocus="this.style.borderColor='#1a1a2e'"
+                       onblur="this.style.borderColor='#e0e0e0'">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:0.82rem;display:block;margin-bottom:6px;">
+                    Hostel Type *
+                </label>
+                <select name="block_type"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;
+                               border-radius:8px;font-size:0.88rem;outline:none;
+                               font-family:'Sora',sans-serif;">
+                    <option value="boys" {% if block.block_type == 'boys' %}selected{% endif %}>🔵 Boys Hostel</option>
+                    <option value="girls" {% if block.block_type == 'girls' %}selected{% endif %}>🔴 Girls Hostel</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:0.82rem;display:block;margin-bottom:6px;">
+                    Total Floors
+                </label>
+                <input type="number" name="total_floors" min="1" max="20"
+                       value="{{ block.total_floors|default:1 }}"
+                       style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;
+                              border-radius:8px;font-size:0.88rem;outline:none;
+                              font-family:'Sora',sans-serif;"
+                       onfocus="this.style.borderColor='#1a1a2e'"
+                       onblur="this.style.borderColor='#e0e0e0'">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:0.82rem;display:block;margin-bottom:6px;">
+                    Assign Warden
+                </label>
+                <select name="warden"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;
+                               border-radius:8px;font-size:0.88rem;outline:none;
+                               font-family:'Sora',sans-serif;">
+                    <option value="">-- No Warden --</option>
+                    {% for warden in wardens %}
+                    <option value="{{ warden.pk }}"
+                        {% if block.warden and block.warden.pk == warden.pk %}selected{% endif %}>
+                        {{ warden.get_full_name|default:warden.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:0.82rem;display:block;margin-bottom:6px;">
+                    Description
+                </label>
+                <textarea name="description" rows="3"
+                          placeholder="Optional description..."
+                          style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;
+                                 border-radius:8px;font-size:0.88rem;outline:none;
+                                 font-family:'Sora',sans-serif;resize:vertical;"
+                          onfocus="this.style.borderColor='#1a1a2e'"
+                          onblur="this.style.borderColor='#e0e0e0'">{{ block.description|default:'' }}</textarea>
+            </div>
+
+            {% if block %}
+            <div style="margin-bottom:16px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" name="is_active"
+                           {% if block.is_active %}checked{% endif %}
+                           style="width:16px;height:16px;">
+                    <span style="font-weight:600;font-size:0.82rem;">Active</span>
+                </label>
+            </div>
+            {% endif %}
+
+            <div style="display:flex;gap:10px;margin-top:24px;">
+                <button type="submit"
+                        style="flex:1;background:#1a1a2e;color:#fff;border:none;
+                               padding:12px;border-radius:10px;font-weight:600;
+                               font-size:0.9rem;cursor:pointer;font-family:'Sora',sans-serif;">
+                    💾 {{ title }}
+                </button>
+                <a href="{% url 'block_list' %}"
+                   style="flex:1;background:#f0f0f0;color:#333;border:none;
+                          padding:12px;border-radius:10px;font-weight:600;
+                          font-size:0.9rem;text-decoration:none;text-align:center;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

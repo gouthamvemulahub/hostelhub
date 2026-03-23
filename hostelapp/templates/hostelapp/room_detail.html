@@ -1,0 +1,92 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Room Details
+<style>
+@media (max-width: 768px) {
+    [style*="max-width"] { max-width: 100% !important; width: 100% !important; }
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    [style*="display:grid"] { grid-template-columns: 1fr !important; }
+    [style*="display:flex"] { flex-wrap: wrap !important; }
+    table { min-width: 500px; }
+    div:has(> table) { overflow-x: auto !important; }
+    input, select, textarea { font-size: 16px !important; }
+    .col-md-4, .col-md-6 { padding: 4px 0; }
+    .card { margin-bottom: 12px; }
+    [style*="padding:28px"] { padding: 14px !important; }
+    [style*="padding:32px"] { padding: 16px !important; }
+    [style*="padding:36px"] { padding: 16px !important; }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+    <div>
+        <h2>Room {{ room.room_number }}</h2>
+        <p>Floor {{ room.floor }} · {{ room.get_room_type_display }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if request.user.is_staff %}
+        <a href="{% url 'room_edit' room.pk %}" class="btn btn-outline-secondary"><i class="fas fa-edit me-2"></i>Edit</a>
+        {% endif %}
+        <a href="{% url 'room_list' %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Back</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header">Room Information</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6"><small class="text-muted">Status</small><div><span class="status-badge {{ room.status }}">{{ room.get_status_display }}</span></div></div>
+                    <div class="col-6"><small class="text-muted">Capacity</small><div><strong>{{ room.capacity }} beds</strong></div></div>
+                    <div class="col-6"><small class="text-muted">Occupied</small><div><strong>{{ room.current_occupancy }}</strong></div></div>
+                    <div class="col-6"><small class="text-muted">Available</small><div><strong>{{ room.available_beds }}</strong></div></div>
+                    <div class="col-12"><small class="text-muted">Monthly Fee</small><div><strong style="color:#e94560;font-size:1.3rem;">₹{{ room.monthly_fee }}</strong></div></div>
+                    {% if room.amenities %}
+                    <div class="col-12"><small class="text-muted">Amenities</small><div>{{ room.amenities }}</div></div>
+                    {% endif %}
+                    {% if room.description %}
+                    <div class="col-12"><small class="text-muted">Description</small><div>{{ room.description }}</div></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Current Occupants</span>
+                {% if request.user.is_staff and room.available_beds > 0 %}
+                <a href="{% url 'allotment_add' %}" class="btn btn-sm btn-primary">+ Allot</a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if allotments %}
+                <div style="overflow-x:auto;"><table class="table mb-0">
+                    <thead><tr><th>Student</th><th>Roll No</th><th>Since</th>{% if request.user.is_staff %}<th></th>{% endif %}</tr></thead>
+                    <tbody>
+                        {% for a in allotments %}
+                        <tr>
+                            <td><strong>{{ a.student.user.get_full_name }}</strong><br><small class="text-muted">{{ a.student.course }}</small></td>
+                            <td>{{ a.student.roll_number }}</td>
+                            <td style="font-size:0.82rem;color:#aaa;">{{ a.allotment_date|date:"d M Y" }}</td>
+                            {% if request.user.is_staff %}
+                            <td>
+                                <form method="post" action="{% url 'allotment_vacate' a.pk %}" onsubmit="return confirm('Vacate this room for {{ a.student.user.get_full_name }}?')">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-danger">Vacate</button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
+                {% else %}
+                <div class="text-center py-4 text-muted">No occupants currently.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

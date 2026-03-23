@@ -1,0 +1,120 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Photo Gallery{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">📸 Hostel Gallery</h4>
+        <p style="color:#6c757d;font-size:0.85rem;margin:4px 0 0;">Photos of our hostel facilities</p>
+    </div>
+    {% if is_admin %}
+    <a href="{% url 'gallery_upload' %}"
+       style="background:#e94560;color:#fff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.88rem;">
+        + Upload Photos
+    </a>
+    {% endif %}
+</div>
+
+<!-- Featured Photos -->
+{% if featured and not category %}
+<div style="margin-bottom:28px;">
+    <h5 style="font-weight:700;color:#1a1a2e;margin-bottom:16px;">⭐ Featured</h5>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        {% for photo in featured %}
+        <div style="border-radius:12px;overflow:hidden;position:relative;cursor:pointer;"
+             onclick="openLightbox('{{ photo.photo.url }}','{{ photo.title }}')">
+            <img src="{{ photo.photo.url }}"
+                 style="width:100%;height:180px;object-fit:cover;transition:transform 0.3s;"
+                 onmouseover="this.style.transform='scale(1.05)'"
+                 onmouseout="this.style.transform='scale(1)'">
+            <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:12px;color:#fff;">
+                <div style="font-weight:700;font-size:0.85rem;">{{ photo.title }}</div>
+                <div style="font-size:0.72rem;opacity:0.7;">{{ photo.get_category_display }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Category Filter -->
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <a href="{% url 'gallery' %}" style="padding:7px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;text-decoration:none;{% if not category %}background:#1a1a2e;color:#fff{% else %}background:#fff;color:#888;border:1px solid #e0e0e0{% endif %}">All</a>
+    {% for val, label in categories %}
+    <a href="?category={{ val }}" style="padding:7px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;text-decoration:none;{% if category == val %}background:#e94560;color:#fff{% else %}background:#fff;color:#888;border:1px solid #e0e0e0{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+<!-- Photo Grid -->
+{% if photos %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+    {% for photo in photos %}
+    <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+        <div style="position:relative;cursor:pointer;"
+             onclick="openLightbox('{{ photo.photo.url }}','{{ photo.title }}')">
+            <img src="{{ photo.photo.url }}"
+                 style="width:100%;height:160px;object-fit:cover;transition:transform 0.3s;"
+                 onmouseover="this.style.transform='scale(1.05)'"
+                 onmouseout="this.style.transform='scale(1)'">
+            {% if photo.is_featured %}
+            <span style="position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:10px;">⭐ Featured</span>
+            {% endif %}
+        </div>
+        <div style="padding:12px;">
+            <div style="font-weight:700;font-size:0.88rem;color:#1a1a2e;margin-bottom:4px;">{{ photo.title }}</div>
+            <div style="font-size:0.75rem;color:#aaa;">{{ photo.get_category_display }} · {{ photo.uploaded_at|date:"d M Y" }}</div>
+            {% if photo.description %}
+            <div style="font-size:0.78rem;color:#6c757d;margin-top:6px;">{{ photo.description|truncatechars:60 }}</div>
+            {% endif %}
+            {% if is_admin %}
+            <form method="post" action="{% url 'gallery_delete' photo.pk %}"
+                  onsubmit="return confirm('Delete this photo?')" style="margin-top:8px;">
+                {% csrf_token %}
+                <button type="submit" style="background:#fff0f3;color:#e94560;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;cursor:pointer;">🗑️ Delete</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center;padding:60px;color:#aaa;">
+    <div style="font-size:4rem;margin-bottom:12px;">📷</div>
+    <p style="font-size:1rem;">No photos yet.</p>
+    {% if is_admin %}
+    <a href="{% url 'gallery_upload' %}" style="color:#e94560;font-weight:700;text-decoration:none;">Upload first photo →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+    <img id="lightboxImg" style="max-width:90vw;max-height:80vh;border-radius:12px;object-fit:contain;">
+    <div id="lightboxTitle" style="color:#fff;font-weight:700;margin-top:14px;font-size:1rem;"></div>
+    <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;margin-top:4px;">Click anywhere to close</div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    [style*="grid-template-columns:repeat(3"] { grid-template-columns: repeat(2,1fr) !important; }
+    [style*="height:180px"] { height: 130px !important; }
+    [style*="height:160px"] { height: 120px !important; }
+}
+@media (max-width: 480px) {
+    [style*="grid-template-columns:repeat(2"] { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<script>
+function openLightbox(url, title) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('lightboxTitle').textContent = title;
+    var lb = document.getElementById('lightbox');
+    lb.style.display = 'flex';
+}
+function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+}
+</script>
+{% endblock %}

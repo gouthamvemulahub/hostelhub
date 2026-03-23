@@ -1,0 +1,684 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+{% if is_admin %}
+<!-- ADMIN / WARDEN DASHBOARD -->
+
+<!-- Welcome Banner -->
+<div style="background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+    <div style="display:flex;align-items:center;gap:16px;">
+        <div style="width:56px;height:56px;background:rgba(233,69,96,0.2);border:2px solid rgba(233,69,96,0.5);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">👋</div>
+        <div>
+            <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;">WELCOME BACK</div>
+            <div style="font-size:clamp(1.1rem,3vw,1.5rem);font-weight:800;color:#fff;letter-spacing:-0.5px;">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:3px;">{{ today|date:"l, d F Y" }} · HostelHub Management</div>
+        </div>
+    </div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+        <div style="text-align:center;">
+            <div style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:#10b981;">{{ total_students }}</div>
+            <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">Students</div>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
+        <div style="text-align:center;">
+            <div style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:#f59e0b;">{{ available_rooms }}</div>
+            <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">Free Rooms</div>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
+        <div style="text-align:center;">
+            <div style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:#e94560;">{{ pending_complaints }}</div>
+            <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">Issues</div>
+        </div>
+        {% if pending_leaves > 0 %}
+        <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
+        <div style="text-align:center;">
+            <div style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:#a78bfa;">{{ pending_leaves }}</div>
+            <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">Leave Reqs</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- STAT CARDS ROW -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <a href="{% url 'student_list' %}" style="text-decoration:none;">
+            <div class="stat-card" style="border-left:4px solid #3b82f6;">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div>
+                    <div class="stat-value">{{ total_students }}</div>
+                    <div class="stat-label">Total Students</div>
+                    <div style="font-size:0.68rem;color:#3b82f6;margin-top:2px;font-weight:600;">{{ allotted_students }} allotted</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-3">
+        <a href="{% url 'room_list' %}" style="text-decoration:none;">
+            <div class="stat-card" style="border-left:4px solid #10b981;">
+                <div class="stat-icon green"><i class="fas fa-door-open"></i></div>
+                <div>
+                    <div class="stat-value">{{ total_rooms }}</div>
+                    <div class="stat-label">Total Rooms</div>
+                    <div style="font-size:0.68rem;color:#10b981;margin-top:2px;font-weight:600;">{{ available_rooms }} available</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-3">
+        <a href="{% url 'complaint_list' %}" style="text-decoration:none;">
+            <div class="stat-card" style="border-left:4px solid #e94560;">
+                <div class="stat-icon red"><i class="fas fa-exclamation-circle"></i></div>
+                <div>
+                    <div class="stat-value">{{ pending_complaints }}</div>
+                    <div class="stat-label">Pending Issues</div>
+                    <div style="font-size:0.68rem;color:#10b981;margin-top:2px;font-weight:600;">{{ resolved_complaints }} resolved</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-3">
+        <a href="{% url 'leave_list' %}" style="text-decoration:none;">
+            <div class="stat-card" style="border-left:4px solid #a78bfa;">
+                <div class="stat-icon" style="background:rgba(167,139,250,0.12);color:#a78bfa;"><i class="fas fa-calendar-alt"></i></div>
+                <div>
+                    <div class="stat-value">{{ pending_leaves }}</div>
+                    <div class="stat-label">Leave Requests</div>
+                    <div style="font-size:0.68rem;color:#a78bfa;margin-top:2px;font-weight:600;">Awaiting review</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- CHARTS + ATTENDANCE ROW -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-chart-pie me-2" style="color:#e94560;"></i>Room Occupancy</div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center" style="padding:20px;">
+                <div style="position:relative;width:140px;height:140px;margin-bottom:16px;">
+                    <canvas id="occupancyChart" width="140" height="140"></canvas>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <div style="font-size:1.6rem;font-weight:800;color:#1a1a2e;">{{ occupancy_pct }}%</div>
+                        <div style="font-size:0.65rem;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Occupied</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#e94560;"></div>
+                        <span style="font-size:0.75rem;color:#666;">Occupied ({{ total_occupied }})</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#10b981;"></div>
+                        <span style="font-size:0.75rem;color:#666;">Free ({{ available_rooms }})</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div>
+                        <span style="font-size:0.75rem;color:#666;">Maintenance ({{ maintenance_rooms }})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-chart-bar me-2" style="color:#3b82f6;"></i>Complaints Status</div>
+            <div class="card-body" style="padding:20px;">
+                <canvas id="complaintsChart" height="160"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clipboard-check me-2" style="color:#10b981;"></i>Today's Attendance</span>
+                <a href="{% url 'attendance_list' %}" class="btn btn-sm btn-outline-primary">Mark</a>
+            </div>
+            <div class="card-body" style="padding:20px;">
+                {% if att_marked > 0 %}
+                <div style="text-align:center;margin-bottom:16px;">
+                    <div style="font-size:2.5rem;font-weight:800;color:{% if att_pct >= 75 %}#10b981{% elif att_pct >= 50 %}#f59e0b{% else %}#e94560{% endif %};">{{ att_pct }}%</div>
+                    <div style="font-size:0.78rem;color:#aaa;">Attendance Rate Today</div>
+                </div>
+                <div style="height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:16px;">
+                    <div style="width:{{ att_pct }}%;height:100%;background:{% if att_pct >= 75 %}#10b981{% elif att_pct >= 50 %}#f59e0b{% else %}#e94560{% endif %};border-radius:4px;transition:width 1s ease;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-around;">
+                    <div style="text-align:center;">
+                        <div style="font-size:1.4rem;font-weight:800;color:#10b981;">{{ att_present }}</div>
+                        <div style="font-size:0.72rem;color:#aaa;">Present</div>
+                    </div>
+                    <div style="width:1px;background:#f0f0f0;"></div>
+                    <div style="text-align:center;">
+                        <div style="font-size:1.4rem;font-weight:800;color:#e94560;">{{ att_absent }}</div>
+                        <div style="font-size:0.72rem;color:#aaa;">Absent</div>
+                    </div>
+                    <div style="width:1px;background:#f0f0f0;"></div>
+                    <div style="text-align:center;">
+                        <div style="font-size:1.4rem;font-weight:800;color:#3b82f6;">{{ att_marked }}</div>
+                        <div style="font-size:0.72rem;color:#aaa;">Marked</div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align:center;padding:20px 0;color:#aaa;">
+                    <div style="font-size:2.5rem;margin-bottom:8px;">📋</div>
+                    <p style="font-size:0.85rem;margin:0;">Attendance not marked yet today.</p>
+                    <a href="{% url 'attendance_list' %}" style="color:#e94560;font-weight:700;font-size:0.82rem;text-decoration:none;margin-top:8px;display:inline-block;">Mark Now →</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTOM ROW -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-exclamation-circle me-2 text-danger"></i>Pending Complaints</span>
+                <a href="{% url 'complaint_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0" style="overflow-x:auto;">
+                {% if recent_complaints %}
+                <table class="table mb-0" style="min-width:400px;">
+                    <thead>
+                        <tr><th>Student</th><th>Title</th><th>Priority</th><th>Date</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in recent_complaints %}
+                        <tr>
+                            <td style="font-size:0.82rem;">{{ c.student.user.get_full_name|truncatechars:16 }}</td>
+                            <td style="font-size:0.82rem;">{{ c.title|truncatechars:22 }}</td>
+                            <td>
+                                {% if c.priority == 'urgent' %}<span class="status-badge full">URGENT</span>
+                                {% elif c.priority == 'high' %}<span class="status-badge maintenance">HIGH</span>
+                                {% else %}<span class="status-badge in_progress">{{ c.priority|upper }}</span>{% endif %}
+                            </td>
+                            <td style="color:#aaa;font-size:0.78rem;">{{ c.created_at|date:"d M" }}</td>
+                            <td><a href="{% url 'complaint_detail' c.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-check-circle fa-2x mb-2" style="color:#10b981;"></i><br>
+                    <span style="font-size:0.85rem;">No pending complaints!</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-key me-2" style="color:#e94560;"></i>Recent Allotments</span>
+                <a href="{% url 'allotment_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0" style="overflow-x:auto;">
+                {% if recent_allotments %}
+                <table class="table mb-0" style="min-width:260px;">
+                    <thead><tr><th>Student</th><th>Room</th><th>Date</th></tr></thead>
+                    <tbody>
+                        {% for a in recent_allotments %}
+                        <tr>
+                            <td style="font-size:0.82rem;">{{ a.student.user.get_full_name|truncatechars:16 }}</td>
+                            <td><strong>{{ a.room.room_number }}</strong></td>
+                            <td style="color:#aaa;font-size:0.78rem;">{{ a.allotment_date|date:"d M" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-3 text-muted" style="font-size:0.85rem;">No allotments yet.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-bolt me-2" style="color:#f59e0b;"></i>Quick Actions</div>
+            <div class="card-body d-grid gap-2">
+                <a href="{% url 'allotment_add' %}" class="btn btn-primary">
+                    <i class="fas fa-key me-2"></i>Allot Room to Student
+                </a>
+                <a href="{% url 'attendance_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-clipboard-check me-2"></i>Mark Today's Attendance
+                </a>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'notice_add' %}" class="btn btn-outline-secondary w-100" style="font-size:0.8rem;">
+                            <i class="fas fa-bullhorn me-1"></i>Post Notice
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'leave_list' %}?status=pending" class="btn btn-outline-secondary w-100" style="font-size:0.8rem;position:relative;">
+                            <i class="fas fa-calendar-alt me-1"></i>Leave Requests
+                            {% if pending_leaves > 0 %}
+                            <span style="position:absolute;top:-6px;right:-6px;background:#e94560;color:#fff;font-size:0.62rem;font-weight:700;padding:1px 5px;border-radius:20px;">{{ pending_leaves }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{% url 'room_add' %}" class="btn btn-outline-secondary w-100" style="font-size:0.8rem;">
+                            <i class="fas fa-plus me-1"></i>Add Room
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'student_list' %}" class="btn btn-outline-secondary w-100" style="font-size:0.8rem;">
+                            <i class="fas fa-users me-1"></i>Students
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HOSTEL BLOCKS OVERVIEW — superadmin only -->
+{% if is_superadmin %}
+<div style="margin-bottom:8px;">
+    <h5 style="font-weight:700;color:#1a1a2e;font-size:0.95rem;">🏢 Hostel Blocks Overview</h5>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+
+    <!-- Boys Hostel -->
+    <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-top:4px solid #0f3460;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-size:1.5rem;">🔵</span>
+            <div>
+                <div style="font-weight:700;color:#1a1a2e;font-size:0.95rem;">Boys Hostel</div>
+                <div style="font-size:0.75rem;color:#6c757d;">{{ boys_blocks.count }} Block{{ boys_blocks.count|pluralize }}</div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:#f0f4ff;border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:1.4rem;font-weight:700;color:#0f3460;">{{ boys_students }}</div>
+                <div style="font-size:0.72rem;color:#6c757d;">Students</div>
+            </div>
+            <div style="background:#f0f4ff;border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:1.4rem;font-weight:700;color:#0f3460;">{{ boys_rooms }}</div>
+                <div style="font-size:0.72rem;color:#6c757d;">Rooms</div>
+            </div>
+        </div>
+        {% for b in boys_blocks %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f0f0f0;margin-top:10px;font-size:0.82rem;">
+            <span style="font-weight:600;color:#1a1a2e;">{{ b.name }}</span>
+            <div style="display:flex;gap:10px;">
+                <span style="color:#10b981;">{{ b.available_rooms }} avail</span>
+                <span style="color:#6c757d;">{{ b.total_rooms }} rooms</span>
+            </div>
+        </div>
+        {% endfor %}
+        <a href="{% url 'block_list' %}" style="display:block;text-align:center;margin-top:12px;background:#0f3460;color:#fff;padding:8px;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;">
+            View Boys Blocks →
+        </a>
+    </div>
+
+    <!-- Girls Hostel -->
+    <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-top:4px solid #e94560;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-size:1.5rem;">🔴</span>
+            <div>
+                <div style="font-weight:700;color:#1a1a2e;font-size:0.95rem;">Girls Hostel</div>
+                <div style="font-size:0.75rem;color:#6c757d;">{{ girls_blocks.count }} Block{{ girls_blocks.count|pluralize }}</div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:#fff5f7;border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:1.4rem;font-weight:700;color:#e94560;">{{ girls_students }}</div>
+                <div style="font-size:0.72rem;color:#6c757d;">Students</div>
+            </div>
+            <div style="background:#fff5f7;border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:1.4rem;font-weight:700;color:#e94560;">{{ girls_rooms }}</div>
+                <div style="font-size:0.72rem;color:#6c757d;">Rooms</div>
+            </div>
+        </div>
+        {% for b in girls_blocks %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f0f0f0;margin-top:10px;font-size:0.82rem;">
+            <span style="font-weight:600;color:#1a1a2e;">{{ b.name }}</span>
+            <div style="display:flex;gap:10px;">
+                <span style="color:#10b981;">{{ b.available_rooms }} avail</span>
+                <span style="color:#6c757d;">{{ b.total_rooms }} rooms</span>
+            </div>
+        </div>
+        {% endfor %}
+        <a href="{% url 'block_list' %}" style="display:block;text-align:center;margin-top:12px;background:#e94560;color:#fff;padding:8px;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;">
+            View Girls Blocks →
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- NOTICES + STAFF ROW -->
+<div class="row g-4">
+    <div class="col-12 col-md-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bullhorn me-2" style="color:#f59e0b;"></i>Latest Notices</span>
+                <a href="{% url 'notice_add' %}" class="btn btn-sm btn-outline-primary">+ Post</a>
+            </div>
+            <div class="card-body p-0">
+                {% for notice in notices %}
+                <div style="padding:14px 18px;border-bottom:1px solid #f5f5f5;display:flex;gap:12px;align-items:flex-start;">
+                    <div style="width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;{% if notice.priority == 'urgent' %}background:rgba(233,69,96,0.1);{% else %}background:rgba(59,130,246,0.1);{% endif %}">
+                        {% if notice.priority == 'urgent' %}
+                        <i class="fas fa-exclamation-triangle" style="color:#e94560;font-size:0.9rem;"></i>
+                        {% else %}
+                        <i class="fas fa-bullhorn" style="color:#3b82f6;font-size:0.9rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;font-size:0.88rem;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ notice.title }}</div>
+                        <div style="font-size:0.78rem;color:#aaa;margin-top:2px;">{{ notice.created_at|date:"d M Y" }} · by {{ notice.posted_by.get_full_name|default:notice.posted_by.username }}</div>
+                    </div>
+                    {% if notice.priority == 'urgent' %}
+                    <span style="background:rgba(233,69,96,0.1);color:#e94560;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;">URGENT</span>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted" style="font-size:0.85rem;">No notices posted yet.</div>
+                {% endfor %}
+                <div style="padding:12px 18px;">
+                    <a href="{% url 'notice_list' %}" style="font-size:0.82rem;color:#e94560;font-weight:600;text-decoration:none;">View all notices →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-5">
+        <a href="{% url 'staff_list' %}" style="text-decoration:none;">
+            <div style="background:linear-gradient(135deg,#0f3460,#16213e);border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:44px;height:44px;border-radius:12px;background:rgba(233,69,96,0.2);border:2px solid rgba(233,69,96,0.4);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#e94560;flex-shrink:0;">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;">ACTIVE STAFF</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#fff;line-height:1;">{{ total_staff }}</div>
+                    </div>
+                </div>
+                <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;">View & Contact <i class="fas fa-arrow-right ms-1"></i></div>
+            </div>
+        </a>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-door-open me-2" style="color:#10b981;"></i>Room Status</div>
+            <div class="card-body" style="padding:16px;">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;color:#555;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:8px;"></span>Available</span>
+                        <strong style="color:#10b981;">{{ available_rooms }}</strong>
+                    </div>
+                    <div style="height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;">
+                        <div style="width:{% widthratio available_rooms total_rooms 100 %}%;height:100%;background:#10b981;border-radius:3px;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;color:#555;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#e94560;margin-right:8px;"></span>Full</span>
+                        <strong style="color:#e94560;">{{ full_rooms }}</strong>
+                    </div>
+                    <div style="height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;">
+                        <div style="width:{% widthratio full_rooms total_rooms 100 %}%;height:100%;background:#e94560;border-radius:3px;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;color:#555;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:8px;"></span>Maintenance</span>
+                        <strong style="color:#f59e0b;">{{ maintenance_rooms }}</strong>
+                    </div>
+                    <div style="height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;">
+                        <div style="width:{% if total_rooms %}{% widthratio maintenance_rooms total_rooms 100 %}{% else %}0{% endif %}%;height:100%;background:#f59e0b;border-radius:3px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+    var ctx = document.getElementById('occupancyChart');
+    if (!ctx) return;
+    var free = {{ total_capacity }} - {{ total_occupied }} - {{ maintenance_rooms }};
+    if (free < 0) free = 0;
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: { datasets: [{ data: [{{ total_occupied }}, free, {{ maintenance_rooms }}], backgroundColor: ['#e94560','#10b981','#f59e0b'], borderWidth: 0, hoverOffset: 4 }] },
+        options: { cutout: '72%', plugins: { legend: { display: false }, tooltip: { enabled: true } }, animation: { animateRotate: true, duration: 1000 } }
+    });
+})();
+(function(){
+    var ctx = document.getElementById('complaintsChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: 'bar',
+        data: { labels: ['Pending','In Progress','Resolved'], datasets: [{ data: [{{ pending_complaints }},{{ in_progress_complaints }},{{ resolved_complaints }}], backgroundColor: ['#f59e0b','#3b82f6','#10b981'], borderRadius: 6, borderSkipped: false }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#f5f5f5' } }, x: { ticks: { font: { size: 11 } }, grid: { display: false } } }, animation: { duration: 800 } }
+    });
+})();
+</script>
+
+{% else %}
+<!-- STUDENT DASHBOARD -->
+
+<div style="background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 4px 24px rgba(0,0,0,0.18);">
+    {% if profile.profile_photo %}
+    <img src="{{ profile.profile_photo.url }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid #e94560;flex-shrink:0;">
+    {% else %}
+    <div style="width:60px;height:60px;border-radius:50%;background:rgba(233,69,96,0.2);border:2px solid rgba(233,69,96,0.5);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#e94560;flex-shrink:0;">
+        {{ profile.user.first_name|first|upper }}
+    </div>
+    {% endif %}
+    <div style="flex:1;">
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;">WELCOME BACK</div>
+        <div style="font-size:clamp(1.1rem,3vw,1.4rem);font-weight:800;color:#fff;">{{ profile.user.get_full_name }}</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:3px;">{{ profile.roll_number }} · {{ profile.course }}, Year {{ profile.year_of_study }}</div>
+    </div>
+    {% if pending_leave > 0 %}
+    <div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:8px 14px;text-align:center;">
+        <div style="font-size:1.2rem;font-weight:800;color:#f59e0b;">{{ pending_leave }}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);">Leave Pending</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-door-open me-2" style="color:#e94560;"></i>My Room</div>
+            <div class="card-body">
+                {% if allotment %}
+                <div style="text-align:center;padding:8px 0;">
+                    <div style="font-size:2.5rem;font-weight:800;color:#1a1a2e;">{{ allotment.room.room_number }}</div>
+                    <div style="font-size:0.8rem;color:#aaa;margin-bottom:12px;">Floor {{ allotment.room.floor }} · {{ allotment.room.get_room_type_display }}</div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div style="background:#f8f9ff;border-radius:10px;padding:8px;">
+                                <div style="font-size:0.65rem;color:#aaa;margin-bottom:2px;">MONTHLY FEE</div>
+                                <div style="font-weight:700;color:#e94560;font-size:0.88rem;">₹{{ allotment.room.monthly_fee }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background:#f8f9ff;border-radius:10px;padding:8px;">
+                                <div style="font-size:0.65rem;color:#aaa;margin-bottom:2px;">SINCE</div>
+                                <div style="font-weight:700;color:#1a1a2e;font-size:0.88rem;">{{ allotment.allotment_date|date:"d M Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if allotment.room.amenities %}
+                    <div style="margin-top:10px;font-size:0.75rem;color:#888;">
+                        <i class="fas fa-star me-1" style="color:#f59e0b;"></i>{{ allotment.room.amenities|truncatechars:40 }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div style="text-align:center;padding:20px 0;color:#aaa;">
+                    <i class="fas fa-home fa-3x mb-3" style="color:#ddd;"></i>
+                    <p style="font-size:0.85rem;">No room allotted yet.<br>Contact the warden.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clipboard-check me-2" style="color:#10b981;"></i>My Attendance</span>
+                <a href="{% url 'attendance_list' %}" class="btn btn-sm btn-outline-primary">Details</a>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+                <div style="position:relative;width:110px;height:110px;margin-bottom:14px;">
+                    <svg width="110" height="110" viewBox="0 0 110 110">
+                        <circle cx="55" cy="55" r="46" fill="none" stroke="#f0f0f0" stroke-width="10"/>
+                        <circle cx="55" cy="55" r="46" fill="none"
+                            stroke="{% if att_pct >= 75 %}#10b981{% elif att_pct >= 50 %}#f59e0b{% else %}#e94560{% endif %}"
+                            stroke-width="10" stroke-dasharray="289"
+                            stroke-dashoffset="{{ att_pct|default:0 }}"
+                            stroke-linecap="round" transform="rotate(-90 55 55)"
+                            style="transition:stroke-dashoffset 1s ease;" id="attCircle"/>
+                    </svg>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <div style="font-size:1.4rem;font-weight:800;color:#1a1a2e;">{{ att_pct }}%</div>
+                        <div style="font-size:0.62rem;color:#aaa;">This Month</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:16px;">
+                    <div style="text-align:center;">
+                        <div style="font-weight:700;color:#10b981;">{{ att_present }}</div>
+                        <div style="font-size:0.72rem;color:#aaa;">Present</div>
+                    </div>
+                    <div style="width:1px;background:#f0f0f0;"></div>
+                    <div style="text-align:center;">
+                        <div style="font-weight:700;color:#1a1a2e;">{{ att_total }}</div>
+                        <div style="font-size:0.72rem;color:#aaa;">Marked</div>
+                    </div>
+                </div>
+                {% if att_pct < 75 and att_total > 0 %}
+                <div style="margin-top:10px;background:rgba(233,69,96,0.08);border-radius:8px;padding:6px 12px;font-size:0.75rem;color:#e94560;font-weight:600;text-align:center;">
+                    ⚠️ Below 75% — Please be regular
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-bolt me-2" style="color:#f59e0b;"></i>Quick Actions</div>
+            <div class="card-body d-grid gap-2">
+                <a href="{% url 'complaint_add' %}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>File a Complaint</a>
+                <a href="{% url 'leave_apply' %}" class="btn btn-outline-primary"><i class="fas fa-calendar-alt me-2"></i>Apply for Leave</a>
+                <a href="{% url 'notice_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-bullhorn me-2"></i>View Notices
+                    {% if unread_notice_count > 0 %}
+                    <span style="background:#e94560;color:#fff;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;">{{ unread_notice_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'document_upload' %}" class="btn btn-outline-secondary"><i class="fas fa-file-upload me-2"></i>Upload Document</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-exclamation-circle me-2" style="color:#e94560;"></i>My Complaints</span>
+                <a href="{% url 'complaint_add' %}" class="btn btn-sm btn-primary">+ New</a>
+            </div>
+            <div class="card-body p-0" style="overflow-x:auto;">
+                {% if my_complaints %}
+                <table class="table mb-0" style="min-width:260px;">
+                    <thead><tr><th>Title</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody>
+                        {% for c in my_complaints %}
+                        <tr>
+                            <td><a href="{% url 'complaint_detail' c.pk %}" style="color:#1a1a2e;text-decoration:none;font-weight:600;font-size:0.82rem;">{{ c.title|truncatechars:20 }}</a></td>
+                            <td><span class="status-badge {{ c.status }}" style="font-size:0.68rem;">{{ c.get_status_display }}</span></td>
+                            <td style="color:#aaa;font-size:0.75rem;">{{ c.created_at|date:"d M" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-4 text-muted" style="font-size:0.85rem;">No complaints filed yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+        {% if my_leaves %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-calendar-alt me-2" style="color:#a78bfa;"></i>My Leaves</span>
+                <a href="{% url 'leave_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% for leave in my_leaves %}
+                <div style="padding:10px 16px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-size:0.85rem;font-weight:600;color:#1a1a2e;">
+                            {% if leave.leave_type == 'home' %}🏠{% elif leave.leave_type == 'medical' %}🏥{% elif leave.leave_type == 'emergency' %}🚨{% else %}📋{% endif %}
+                            {{ leave.get_leave_type_display }}
+                        </div>
+                        <div style="font-size:0.75rem;color:#aaa;">{{ leave.from_date|date:"d M" }} – {{ leave.to_date|date:"d M Y" }} · {{ leave.days }} day{{ leave.days|pluralize }}</div>
+                    </div>
+                    {% if leave.status == 'pending' %}
+                    <span style="background:rgba(245,158,11,0.1);color:#f59e0b;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">⏳ Pending</span>
+                    {% elif leave.status == 'approved' %}
+                    <span style="background:rgba(16,185,129,0.1);color:#10b981;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">✅ Approved</span>
+                    {% else %}
+                    <span style="background:rgba(233,69,96,0.1);color:#e94560;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">❌ {{ leave.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bell me-2" style="color:#f59e0b;"></i>Notice Board</span>
+                <a href="{% url 'notice_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% for notice in notices %}
+                <div style="padding:12px 16px;border-bottom:1px solid #f5f5f5;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                        {% if notice.priority == 'urgent' %}
+                        <span style="background:rgba(233,69,96,0.1);color:#e94560;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:10px;">URGENT</span>
+                        {% endif %}
+                        <span style="font-size:0.85rem;font-weight:600;color:#1a1a2e;">{{ notice.title }}</span>
+                    </div>
+                    <div style="font-size:0.78rem;color:#aaa;">{{ notice.created_at|date:"d M Y" }}</div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted" style="font-size:0.85rem;">No notices yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var circle = document.getElementById('attCircle');
+    if (circle) {
+        var pct = {{ att_pct|default:0 }};
+        var offset = 289 - (pct / 100 * 289);
+        setTimeout(function() { circle.style.strokeDashoffset = offset; }, 100);
+    }
+});
+</script>
+
+{% endif %}
+{% endblock %}

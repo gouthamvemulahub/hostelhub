@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Sheet | HostelHub</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Arial', sans-serif; background: #fff; color: #1a1a2e; font-size: 13px; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        /* Header */
+        .header { border-bottom: 3px solid #1a1a2e; padding-bottom: 16px; margin-bottom: 20px; }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .hostel-name { font-size: 22px; font-weight: 900; color: #1a1a2e; letter-spacing: -0.5px; }
+        .hostel-name span { color: #e94560; }
+        .hostel-sub { font-size: 10px; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+        .doc-title { text-align: right; }
+        .doc-title h2 { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+        .doc-title p { font-size: 11px; color: #888; margin-top: 3px; }
+
+        /* Info row */
+        .info-row { display: flex; gap: 24px; background: #f8f9ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; flex-wrap: wrap; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .info-value { font-size: 13px; font-weight: 700; color: #1a1a2e; margin-top: 2px; }
+
+        /* Stats */
+        .stats { display: flex; gap: 12px; margin-bottom: 20px; }
+        .stat-box { flex: 1; border-radius: 8px; padding: 12px; text-align: center; }
+        .stat-box.total   { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .stat-box.present { background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .stat-box.absent  { background: #fff1f2; border: 1px solid #fecdd3; }
+        .stat-box.unmarked { background: #fefce8; border: 1px solid #fde68a; }
+        .stat-num  { font-size: 22px; font-weight: 800; }
+        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        .stat-box.total   .stat-num  { color: #2563eb; }
+        .stat-box.present .stat-num  { color: #16a34a; }
+        .stat-box.absent  .stat-num  { color: #e94560; }
+        .stat-box.unmarked .stat-num { color: #ca8a04; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        thead tr { background: #1a1a2e; color: #fff; }
+        thead th { padding: 10px 12px; text-align: left; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 700; }
+        tbody tr:nth-child(even) { background: #f8f9ff; }
+        tbody tr { border-bottom: 1px solid #e5e7eb; }
+        tbody td { padding: 9px 12px; font-size: 12px; }
+        .status-present { color: #16a34a; font-weight: 700; }
+        .status-absent  { color: #e94560; font-weight: 700; }
+        .status-unmarked { color: #ca8a04; font-weight: 600; }
+        .pct-bar { display: flex; align-items: center; gap: 8px; }
+        .pct-track { width: 80px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+        .pct-fill  { height: 100%; border-radius: 3px; }
+        .pct-green { background: #16a34a; }
+        .pct-yellow { background: #ca8a04; }
+        .pct-red   { background: #e94560; }
+
+        /* Signature row */
+        .signature-row { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+        .signature-box { text-align: center; width: 180px; }
+        .signature-line { border-top: 1px solid #1a1a2e; padding-top: 6px; font-size: 11px; font-weight: 600; color: #1a1a2e; margin-top: 40px; }
+
+        /* Print button - hidden when printing */
+        .print-actions { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 20px; }
+        .btn-print { background: #1a1a2e; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+        .btn-back  { background: #f0f4ff; color: #1a1a2e; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.88rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+
+        @media print {
+            .print-actions { display: none !important; }
+            body { font-size: 11px; }
+            .container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Print Actions (hidden on print) -->
+    <div class="print-actions">
+        {% if print_type == 'daily' %}
+        <a href="/attendance/?date={{ sel_date }}" class="btn-back">← Back</a>
+        {% else %}
+        <a href="/attendance/report/?month={{ year }}-{{ month|stringformat:'02d' }}" class="btn-back">← Back</a>
+        {% endif %}
+        <button class="btn-print" onclick="window.print()">🖨️ Print</button>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div>
+                <div class="hostel-name"><span>Hostel</span>Hub</div>
+                <div class="hostel-sub">Management System</div>
+            </div>
+            <div class="doc-title">
+                {% if print_type == 'daily' %}
+                <h2>Daily Attendance Sheet</h2>
+                <p>Date: {{ sel_date|date:"d F Y" }} ({{ sel_date|date:"l" }})</p>
+                {% else %}
+                <h2>Monthly Attendance Report</h2>
+                <p>{{ month_name }} {{ year }}</p>
+                {% endif %}
+                <p style="margin-top:4px;font-size:10px;color:#aaa;">Printed on: {% now "d M Y, h:i A" %}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Row -->
+    <div class="info-row">
+        <div class="info-item">
+            <span class="info-label">Institution</span>
+            <span class="info-value">JNTUH UCEW</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Total Students</span>
+            <span class="info-value">{{ rows|length }}</span>
+        </div>
+        {% if print_type == 'daily' %}
+        <div class="info-item">
+            <span class="info-label">Date</span>
+            <span class="info-value">{{ sel_date|date:"d-m-Y" }}</span>
+        </div>
+        {% else %}
+        <div class="info-item">
+            <span class="info-label">Month</span>
+            <span class="info-value">{{ month_name }} {{ year }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if print_type == 'daily' %}
+    <!-- Daily Stats -->
+    <div class="stats">
+        <div class="stat-box total">
+            <div class="stat-num">{{ total }}</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-box present">
+            <div class="stat-num">{{ present }}</div>
+            <div class="stat-label">Present</div>
+        </div>
+        <div class="stat-box absent">
+            <div class="stat-num">{{ absent }}</div>
+            <div class="stat-label">Absent</div>
+        </div>
+        <div class="stat-box unmarked">
+            <div class="stat-num">{{ unmarked }}</div>
+            <div class="stat-label">Unmarked</div>
+        </div>
+    </div>
+
+    <!-- Daily Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Course</th>
+                <th>Year</th>
+                <th>Status</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><strong>{{ row.student.user.get_full_name|default:row.student.user.username }}</strong></td>
+            <td><code>{{ row.student.roll_number }}</code></td>
+            <td>{{ row.student.course }}</td>
+            <td>Year {{ row.student.year_of_study }}</td>
+            <td>
+                {% if row.status == 'present' %}
+                <span class="status-present">✓ Present</span>
+                {% elif row.status == 'absent' %}
+                <span class="status-absent">✗ Absent</span>
+                {% else %}
+                <span class="status-unmarked">— Unmarked</span>
+                {% endif %}
+            </td>
+            <td>{{ row.remarks|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <!-- Monthly Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Course</th>
+                <th>Days Marked</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Attendance %</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><strong>{{ row.student.user.get_full_name|default:row.student.user.username }}</strong></td>
+            <td><code>{{ row.student.roll_number }}</code></td>
+            <td>{{ row.student.course }}</td>
+            <td>{{ row.total }}</td>
+            <td><span class="status-present">{{ row.present }}</span></td>
+            <td><span class="status-absent">{{ row.absent }}</span></td>
+            <td>
+                <div class="pct-bar">
+                    <div class="pct-track">
+                        <div class="pct-fill {% if row.pct >= 75 %}pct-green{% elif row.pct >= 50 %}pct-yellow{% else %}pct-red{% endif %}"
+                             style="width:{{ row.pct }}%;"></div>
+                    </div>
+                    <span style="font-weight:700;color:{% if row.pct >= 75 %}#16a34a{% elif row.pct >= 50 %}#ca8a04{% else %}#e94560{% endif %};">
+                        {{ row.pct }}%
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- Signatures -->
+    <div class="signature-row">
+        <div class="signature-box">
+            <div class="signature-line">Prepared by</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">Verified by</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">Warden Signature</div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

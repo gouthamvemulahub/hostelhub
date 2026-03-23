@@ -1,0 +1,274 @@
+{% extends 'hostelapp/base.html' %}
+{% block public_content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | HostelHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Sora', sans-serif; background: #f8f9ff; padding: 40px 20px; }
+        .auth-wrap { max-width: 820px; margin: 0 auto; }
+        .brand { text-align: center; margin-bottom: 32px; }
+        .brand h2 { font-weight: 800; font-size: 1.8rem; letter-spacing: -1px; }
+        .brand span { color: #e94560; }
+        .brand p { color: #6c757d; font-size: 0.88rem; }
+        .auth-card { background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 4px 40px rgba(0,0,0,0.08); }
+        .section-title { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: #e94560; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #fff0f2; }
+        .form-control, .form-select { border: 1px solid #e0e0e0; border-radius: 10px; padding: 11px 14px; font-size: 0.88rem; font-family: 'Sora', sans-serif; }
+        .form-control:focus, .form-select:focus { border-color: #e94560; box-shadow: 0 0 0 3px rgba(233,69,96,0.1); }
+        .form-label { font-weight: 600; font-size: 0.82rem; margin-bottom: 5px; }
+        .btn-register { background: #e94560; color: #fff; border: none; border-radius: 10px; padding: 13px 32px; font-weight: 700; font-size: 0.95rem; font-family: 'Sora', sans-serif; transition: all 0.2s; }
+        .btn-register:hover { background: #c73652; }
+        .errorlist { list-style: none; padding: 0; margin: 4px 0 0; }
+        .errorlist li { color: #e94560; font-size: 0.78rem; }
+        .login-link { text-align: center; font-size: 0.85rem; color: #6c757d; margin-top: 20px; }
+        .login-link a { color: #e94560; font-weight: 600; text-decoration: none; }
+        .hostel-type-card {
+            border: 2px solid #e0e0e0; border-radius: 12px; padding: 14px 18px;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;
+        }
+        .hostel-type-card:hover { border-color: #e94560; background: #fff5f7; }
+        .hostel-type-card.selected-boys { border-color: #0f3460; background: #f0f4ff; }
+        .hostel-type-card.selected-girls { border-color: #e94560; background: #fff5f7; }
+        @media (max-width: 768px) {
+            body { padding: 20px 12px; }
+            .auth-card { padding: 24px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="auth-wrap">
+    <div class="brand">
+        <h2><span>Hostel</span>Hub</h2>
+        <p>Create your student account</p>
+    </div>
+    <div class="auth-card">
+        {% for message in messages %}
+        <div style="background:rgba(233,69,96,0.1);color:#e94560;border:1px solid rgba(233,69,96,0.2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;">
+            ⚠️ {{ message }}
+        </div>
+        {% endfor %}
+
+        <form method="post" enctype="multipart/form-data" autocomplete="off">
+            {% csrf_token %}
+
+            <!-- ACCOUNT INFORMATION -->
+            <div class="section-title">Account Information</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">First Name <span style="color:#e94560;">*</span></label>
+                    <input type="text" name="first_name" class="form-control"
+                           placeholder="Enter first name"
+                           value="{{ user_form.first_name.value|default:'' }}"
+                           autocomplete="given-name" required>
+                    {{ user_form.first_name.errors }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Last Name / Surname <span style="color:#e94560;">*</span></label>
+                    <input type="text" name="last_name" class="form-control"
+                           placeholder="Enter last name / surname"
+                           value="{{ user_form.last_name.value|default:'' }}"
+                           autocomplete="family-name" required>
+                    {{ user_form.last_name.errors }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Username <span style="color:#e94560;">*</span></label>
+                    <input type="text" name="username" class="form-control"
+                           placeholder="Choose a username"
+                           value="{{ user_form.username.value|default:'' }}"
+                           autocomplete="username" required>
+                    {{ user_form.username.errors }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email <span style="color:#e94560;">*</span></label>
+                    <input type="email" name="email" class="form-control"
+                           placeholder="Enter your email"
+                           value="{{ user_form.email.value|default:'' }}"
+                           autocomplete="email" required>
+                    {{ user_form.email.errors }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Password <span style="color:#e94560;">*</span></label>
+                    <input type="password" name="password1" class="form-control"
+                           placeholder="Create a strong password"
+                           autocomplete="new-password" required>
+                    {{ user_form.password1.errors }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Confirm Password <span style="color:#e94560;">*</span></label>
+                    <input type="password" name="password2" class="form-control"
+                           placeholder="Re-enter your password"
+                           autocomplete="new-password" required>
+                    {{ user_form.password2.errors }}
+                </div>
+            </div>
+
+            <!-- HOSTEL SELECTION -->
+            <div class="section-title">Hostel Selection</div>
+            <div class="row g-3 mb-4">
+
+                <!-- Hostel Type -->
+                <div class="col-12">
+                    <label class="form-label">Hostel Type <span style="color:#e94560;">*</span></label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="hostel-type-card" id="card_boys"
+                                 onclick="selectHostelType('boys')">
+                                <span style="font-size:1.5rem;">🔵</span>
+                                <div>
+                                    <div style="font-weight:700;font-size:0.88rem;color:#1a1a2e;">Boys Hostel</div>
+                                    <div style="font-size:0.75rem;color:#6c757d;">Male students only</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="hostel-type-card" id="card_girls"
+                                 onclick="selectHostelType('girls')">
+                                <span style="font-size:1.5rem;">🔴</span>
+                                <div>
+                                    <div style="font-weight:700;font-size:0.88rem;color:#1a1a2e;">Girls Hostel</div>
+                                    <div style="font-size:0.75rem;color:#6c757d;">Female students only</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="hostel_type" id="hostel_type_input"
+                           value="{{ request.POST.hostel_type|default:'' }}" required>
+                </div>
+
+                <!-- Block Selection -->
+                <div class="col-md-6">
+                    <label class="form-label">Block <span style="color:#aaa;font-weight:400;">(optional)</span></label>
+                    <select name="block" class="form-control" id="blockSelect">
+                        <option value="">-- Select Block --</option>
+                        {% for b in blocks %}
+                        <option value="{{ b.id }}"
+                                data-type="{{ b.block_type }}"
+                                {% if request.POST.block == b.id|stringformat:"s" %}selected{% endif %}>
+                            {{ b.name }} ({{ b.get_block_type_display }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- STUDENT DETAILS -->
+            <div class="section-title">Student Details</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Roll Number <span style="color:#e94560;">*</span></label>
+                    <input type="text" name="roll_number" class="form-control"
+                           placeholder="e.g. 24XW1A0550"
+                           value="{{ request.POST.roll_number|default:''|upper }}"
+                           style="text-transform:uppercase;"
+                           oninput="this.value=this.value.toUpperCase()"
+                           required>
+                    {{ profile_form.roll_number.errors }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Phone <span style="color:#e94560;">*</span></label>
+                    {{ profile_form.phone }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Gender <span style="color:#e94560;">*</span></label>
+                    {{ profile_form.gender }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Course <span style="color:#e94560;">*</span></label>
+                    <input type="text" name="course" class="form-control"
+                           placeholder="e.g. B.TECH, MBA, MCA"
+                           value="{{ request.POST.course|default:''|upper }}"
+                           style="text-transform:uppercase;"
+                           oninput="this.value=this.value.toUpperCase()"
+                           autocomplete="off" required>
+                    {{ profile_form.course.errors }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Year of Study <span style="color:#e94560;">*</span></label>
+                    {{ profile_form.year_of_study }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Address <span style="color:#e94560;">*</span></label>
+                    {{ profile_form.address }}
+                </div>
+            </div>
+
+            <!-- PARENT DETAILS -->
+            <div class="section-title">Parent Details</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Parent Name <span style="color:#e94560;">*</span></label>
+                    <input type="text" name="guardian_name" class="form-control"
+                           placeholder="Enter parent / guardian name"
+                           value="{{ request.POST.guardian_name|default:'' }}"
+                           autocomplete="off" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Parent Phone <span style="color:#e94560;">*</span></label>
+                    <input type="tel" name="guardian_phone" class="form-control"
+                           placeholder="Enter 10-digit parent phone number"
+                           value="{{ request.POST.guardian_phone|default:'' }}"
+                           maxlength="10" minlength="10"
+                           pattern="[0-9]{10}"
+                           oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
+                           title="Please enter exactly 10 digits"
+                           autocomplete="off" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Profile Photo <span style="color:#aaa;font-weight:400;">(optional)</span></label>
+                    {{ profile_form.profile_photo }}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="login-link">Already have an account? <a href="{% url 'login' %}">Sign In</a></div>
+                <button type="submit" class="btn-register">Create Account →</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Hostel type selection
+function selectHostelType(type) {
+    document.getElementById('hostel_type_input').value = type;
+
+    // Update card styles
+    var cardBoys  = document.getElementById('card_boys');
+    var cardGirls = document.getElementById('card_girls');
+    cardBoys.className  = 'hostel-type-card' + (type === 'boys'  ? ' selected-boys'  : '');
+    cardGirls.className = 'hostel-type-card' + (type === 'girls' ? ' selected-girls' : '');
+
+    // Filter block dropdown
+    filterBlocks(type);
+}
+
+function filterBlocks(hostelType) {
+    var select  = document.getElementById('blockSelect');
+    var options = select.querySelectorAll('option');
+    options.forEach(function(opt) {
+        if (!opt.value) return;
+        if (!hostelType || opt.dataset.type === hostelType) {
+            opt.style.display = '';
+        } else {
+            opt.style.display = 'none';
+            if (opt.selected) {
+                opt.selected = false;
+                select.value = '';
+            }
+        }
+    });
+}
+
+// Restore selection on page reload (validation error)
+document.addEventListener('DOMContentLoaded', function() {
+    var saved = document.getElementById('hostel_type_input').value;
+    if (saved) selectHostelType(saved);
+});
+</script>
+</body>
+</html>
+{% endblock %}

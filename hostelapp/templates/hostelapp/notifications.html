@@ -1,0 +1,91 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Notifications
+<style>
+@media (max-width: 768px) {
+    [style*="max-width"] { max-width: 100% !important; width: 100% !important; }
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    [style*="display:grid"] { grid-template-columns: 1fr !important; }
+    [style*="display:flex"] { flex-wrap: wrap !important; }
+    table { min-width: 500px; }
+    input, select, textarea { font-size: 16px !important; }
+    .col-md-4, .col-md-6, .col-lg-8 { padding: 4px 0; }
+    .card { margin-bottom: 12px; }
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">🔔 Notifications</h4>
+        <p style="color:#6c757d;font-size:0.85rem;margin:4px 0 0;">
+            {% if unread > 0 %}{{ unread }} unread notification{{ unread|pluralize }}{% else %}All caught up!{% endif %}
+        </p>
+    </div>
+    {% if notifs %}
+    <form method="post" action="{% url 'notifications_mark_all_read' %}">
+        {% csrf_token %}
+        <button type="submit"
+            style="background:#1a1a2e;color:#fff;border:none;border-radius:10px;
+                   padding:10px 20px;font-weight:600;font-size:0.85rem;cursor:pointer;">
+            ✓ Mark All Read
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;">
+    {% for n in notifs %}
+    <div style="display:flex;align-items:flex-start;gap:14px;padding:16px 20px;
+                border-bottom:1px solid #f0f0f0;
+                background:{% if not n.is_read %}#fff9f9{% else %}#fff{% endif %};">
+
+        <!-- Icon -->
+        <div style="width:42px;height:42px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+            {% if n.notif_type == 'notice' %}background:rgba(59,130,246,0.1);
+            {% elif n.notif_type == 'complaint' %}background:rgba(233,69,96,0.1);
+            {% elif n.notif_type == 'allotment' %}background:rgba(16,185,129,0.1);
+            {% elif n.notif_type == 'attendance' %}background:rgba(245,158,11,0.1);
+            {% elif n.notif_type == 'message' %}background:rgba(139,92,246,0.1);
+            {% else %}background:rgba(107,114,128,0.1);{% endif %}">
+            {% if n.notif_type == 'notice' %}📋
+            {% elif n.notif_type == 'complaint' %}📢
+            {% elif n.notif_type == 'allotment' %}🏠
+            {% elif n.notif_type == 'attendance' %}📅
+            {% elif n.notif_type == 'message' %}💬
+            {% else %}🔔{% endif %}
+        </div>
+
+        <!-- Content -->
+        <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <span style="font-weight:{% if not n.is_read %}700{% else %}600{% endif %};color:#1a1a2e;font-size:0.9rem;">
+                    {{ n.title }}
+                </span>
+                <span style="font-size:0.75rem;color:#aaa;white-space:nowrap;flex-shrink:0;">
+                    {{ n.created_at|timesince }} ago
+                </span>
+            </div>
+            <p style="color:#6c757d;font-size:0.82rem;margin:4px 0 0;line-height:1.5;">
+                {{ n.message }}
+            </p>
+            {% if n.link %}
+            <a href="{{ n.link }}"
+               style="font-size:0.78rem;color:#e94560;font-weight:600;text-decoration:none;margin-top:6px;display:inline-block;">
+                View →
+            </a>
+            {% endif %}
+        </div>
+
+        {% if not n.is_read %}
+        <div style="width:8px;height:8px;border-radius:50%;background:#e94560;flex-shrink:0;margin-top:6px;"></div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:60px;color:#aaa;">
+        <div style="font-size:3rem;margin-bottom:12px;">🔔</div>
+        <p style="font-size:0.88rem;">No notifications yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

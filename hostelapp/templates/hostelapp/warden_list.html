@@ -1,0 +1,74 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Wardens{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">🔑 Warden Accounts</h4>
+        <p style="color:#6c757d;font-size:0.85rem;margin:4px 0 0;">Manage hostel warden accounts</p>
+    </div>
+    <a href="{% url 'warden_create' %}"
+       style="background:#e94560;color:#fff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.88rem;">
+        + Create Warden
+    </a>
+</div>
+
+<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+        <thead>
+            <tr style="background:#f8f9ff;">
+                <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">#</th>
+                <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">NAME</th>
+                <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">USERNAME</th>
+                <th style="padding:12px 16px;text-align:left;font-size:0.78rem;color:#6c757d;font-weight:700;">EMAIL</th>
+                <th style="padding:12px 16px;text-align:center;font-size:0.78rem;color:#6c757d;font-weight:700;">ACTION</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for warden in wardens %}
+        <tr style="border-top:1px solid #f0f0f0;">
+            <td style="padding:14px 16px;color:#aaa;">{{ forloop.counter }}</td>
+            <td style="padding:14px 16px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:38px;height:38px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">
+                        {{ warden.first_name|first|upper }}{{ warden.last_name|first|upper }}
+                    </div>
+                    <div>
+                        <div style="font-weight:700;color:#1a1a2e;font-size:0.88rem;">{{ warden.get_full_name|default:warden.username }}</div>
+                        <div style="font-size:0.72rem;color:#aaa;">Warden</div>
+                    </div>
+                </div>
+            </td>
+            <td style="padding:14px 16px;font-family:monospace;color:#0f3460;font-size:0.88rem;">{{ warden.username }}</td>
+            <td style="padding:14px 16px;font-size:0.85rem;color:#6c757d;">{{ warden.email|default:"—" }}</td>
+            <td style="padding:14px 16px;text-align:center;">
+                <form method="post" action="{% url 'warden_delete' warden.pk %}"
+                      onsubmit="return confirm('Delete warden {{ warden.username }}? This cannot be undone!')">
+                    {% csrf_token %}
+                    <button type="submit"
+                        style="background:#fff0f3;color:#e94560;border:none;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                        🗑️ Delete
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" style="text-align:center;padding:60px;color:#aaa;">
+                <div style="font-size:3rem;margin-bottom:12px;">🔑</div>
+                <p>No wardens created yet.</p>
+                <a href="{% url 'warden_create' %}" style="color:#e94560;font-weight:700;text-decoration:none;">Create first warden →</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    table { min-width: 500px; }
+    div:has(> table) { overflow-x: auto; }
+}
+</style>
+{% endblock %}

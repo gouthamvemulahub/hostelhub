@@ -1,0 +1,102 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Upload Document{% endblock %}
+{% block content %}
+
+<div style="max-width:560px;margin:0 auto;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <a href="{% url 'document_list' %}" style="color:#e94560;text-decoration:none;font-size:1.2rem;">←</a>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">📄 Upload Document</h4>
+    </div>
+
+    {% for message in messages %}
+    <div style="padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:0.85rem;font-weight:600;
+        {% if message.tags == 'error' %}background:rgba(233,69,96,0.1);color:#e94560;
+        {% else %}background:rgba(16,185,129,0.1);color:#10b981;{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    <div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:28px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="margin-bottom:18px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:6px;display:block;">Document Type <span style="color:#e94560;">*</span></label>
+                <select name="document_type" class="form-control" required>
+                    <option value="">-- Select Document Type --</option>
+                    {% for val, label in doc_types %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom:18px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:6px;display:block;">
+                    Title <span style="color:#aaa;font-weight:400;">(optional)</span>
+                </label>
+                <input type="text" name="title" class="form-control"
+                       placeholder="e.g. Aadhar Card Front Side">
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:8px;display:block;">File <span style="color:#e94560;">*</span></label>
+                <div style="border:2px dashed #e0e0e0;border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;"
+                     onclick="document.getElementById('fileInput').click()"
+                     ondragover="event.preventDefault();this.style.borderColor='#e94560'"
+                     ondragleave="this.style.borderColor='#e0e0e0'">
+                    <div id="filePreview">
+                        <div style="font-size:2.5rem;margin-bottom:8px;">📎</div>
+                        <div style="font-weight:600;color:#1a1a2e;margin-bottom:4px;">Click to upload or drag file here</div>
+                        <div style="font-size:0.78rem;color:#aaa;">JPG, PNG, PDF supported • Max 5MB</div>
+                    </div>
+                    <div id="fileName" style="font-size:0.85rem;color:#e94560;font-weight:600;margin-top:8px;display:none;"></div>
+                </div>
+                <input type="file" id="fileInput" name="file"
+                       accept=".jpg,.jpeg,.png,.pdf,.gif,.webp"
+                       style="display:none;" onchange="showFileName(this)" required>
+            </div>
+
+            <!-- Accepted documents info -->
+            <div style="background:#f8f9ff;border-radius:10px;padding:14px;margin-bottom:20px;">
+                <div style="font-weight:700;font-size:0.82rem;color:#1a1a2e;margin-bottom:8px;">📋 Accepted Documents:</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.78rem;color:#6c757d;">
+                    <span>✅ Aadhar Card</span>
+                    <span>✅ PAN Card</span>
+                    <span>✅ College ID</span>
+                    <span>✅ Passport</span>
+                    <span>✅ Transfer Certificate</span>
+                    <span>✅ Marksheet</span>
+                    <span>✅ Voter ID</span>
+                    <span>✅ Other documents</span>
+                </div>
+            </div>
+
+            <button type="submit"
+                style="width:100%;background:#e94560;color:#fff;border:none;border-radius:12px;
+                       padding:13px;font-weight:700;font-size:0.95rem;cursor:pointer;">
+                📤 Upload Document
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    [style*="max-width:560px"] { max-width: 100% !important; }
+    [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+    input, select { font-size: 16px !important; }
+}
+</style>
+
+<script>
+function showFileName(input) {
+    if (input.files && input.files[0]) {
+        document.getElementById('filePreview').style.opacity = '0.5';
+        var fn = document.getElementById('fileName');
+        fn.textContent = '📎 ' + input.files[0].name;
+        fn.style.display = 'block';
+        document.querySelector('[onclick]').style.borderColor = '#e94560';
+    }
+}
+</script>
+{% endblock %}

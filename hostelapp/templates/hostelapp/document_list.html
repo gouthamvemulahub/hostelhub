@@ -1,0 +1,130 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Documents{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">📄 {% if is_admin %}Student Documents{% else %}My Documents{% endif %}</h4>
+        <p style="color:#6c757d;font-size:0.85rem;margin:4px 0 0;">{% if is_admin %}View and verify student documents{% else %}Upload and manage your documents{% endif %}</p>
+    </div>
+    {% if not is_admin %}
+    <a href="{% url 'document_upload' %}"
+       style="background:#e94560;color:#fff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.88rem;">
+        + Upload Document
+    </a>
+    {% endif %}
+</div>
+
+{% if is_admin %}
+<!-- Admin filter -->
+<div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+    <form method="get" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select name="student" onchange="this.form.submit()"
+                style="border:1px solid #e0e0e0;border-radius:8px;padding:8px 12px;font-size:0.85rem;font-family:'Sora',sans-serif;min-width:200px;">
+            <option value="">All Students</option>
+            {% for s in students %}
+            <option value="{{ s.id }}" {% if sel_student == s.id|stringformat:"s" %}selected{% endif %}>
+                {{ s.user.get_full_name }} ({{ s.roll_number }})
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+{% endif %}
+
+{% if documents %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+    {% for doc in documents %}
+    <div style="background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;">
+        <!-- File Preview - only students can see actual file -->
+        <div style="height:140px;background:#f8f9ff;display:flex;align-items:center;justify-content:center;position:relative;">
+            {% if not is_admin and doc.is_image %}
+            <img src="{{ doc.file.url }}" style="width:100%;height:140px;object-fit:cover;cursor:pointer;"
+                 onclick="window.open('{{ doc.file.url }}','_blank')">
+            {% elif not is_admin and doc.is_pdf %}
+            <div style="text-align:center;">
+                <div style="font-size:3rem;">📑</div>
+                <div style="font-size:0.78rem;color:#e94560;font-weight:700;">PDF</div>
+            </div>
+            {% else %}
+            <div style="text-align:center;">
+                <div style="font-size:3rem;">📄</div>
+                <div style="font-size:0.78rem;color:#6c757d;">{{ doc.get_document_type_display }}</div>
+            </div>
+            {% endif %}
+            <!-- Verified badge -->
+            {% if doc.is_verified %}
+            <span style="position:absolute;top:8px;right:8px;background:#10b981;color:#fff;font-size:0.68rem;font-weight:700;padding:3px 8px;border-radius:10px;">✅ Verified</span>
+            {% else %}
+            <span style="position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;font-size:0.68rem;font-weight:700;padding:3px 8px;border-radius:10px;">⏳ Pending</span>
+            {% endif %}
+        </div>
+        <!-- Details -->
+        <div style="padding:14px;">
+            <div style="font-weight:700;font-size:0.88rem;color:#1a1a2e;margin-bottom:4px;">{{ doc.title }}</div>
+            <div style="font-size:0.75rem;color:#aaa;margin-bottom:8px;">
+                {{ doc.get_document_type_display }} · {{ doc.uploaded_at|date:"d M Y" }}
+            </div>
+            {% if is_admin %}
+            <div style="font-size:0.75rem;color:#6c757d;margin-bottom:10px;">
+                👤 {{ doc.student.user.get_full_name }} ({{ doc.student.roll_number }})
+            </div>
+            {% endif %}
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                {% if not is_admin %}
+                <!-- Students can view and download their own documents -->
+                <a href="{{ doc.file.url }}" target="_blank"
+                   style="background:#f0f4ff;color:#0f3460;padding:5px 12px;border-radius:7px;font-size:0.78rem;font-weight:600;text-decoration:none;">
+                    👁️ View
+                </a>
+                <a href="{{ doc.file.url }}" download
+                   style="background:#f0fdf4;color:#10b981;padding:5px 12px;border-radius:7px;font-size:0.78rem;font-weight:600;text-decoration:none;">
+                    ⬇️ Download
+                </a>
+                <form method="post" action="{% url 'document_delete' doc.pk %}"
+                      onsubmit="return confirm('Delete this document?')" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit"
+                        style="background:#fff0f3;color:#e94560;border:none;padding:5px 12px;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;">
+                        🗑️
+                    </button>
+                </form>
+                {% else %}
+                <!-- Admin can only verify — cannot view, download or delete -->
+                <a href="{% url 'document_verify' doc.pk %}"
+                   style="background:{% if doc.is_verified %}#fff0f3{% else %}#f0fdf4{% endif %};
+                          color:{% if doc.is_verified %}#e94560{% else %}#10b981{% endif %};
+                          padding:5px 12px;border-radius:7px;font-size:0.78rem;font-weight:600;text-decoration:none;">
+                    {% if doc.is_verified %}❌ Unverify{% else %}✅ Verify{% endif %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center;padding:80px 20px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+    <div style="font-size:4rem;margin-bottom:16px;">📄</div>
+    <h5 style="font-weight:700;color:#1a1a2e;">No documents yet</h5>
+    <p style="color:#aaa;font-size:0.88rem;">{% if is_admin %}No documents uploaded by students yet.{% else %}Upload your ID card, Aadhar, or other documents.{% endif %}</p>
+    {% if not is_admin %}
+    <a href="{% url 'document_upload' %}"
+       style="display:inline-block;background:#e94560;color:#fff;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:12px;">
+        + Upload First Document
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+@media (max-width: 768px) {
+    [style*="grid-template-columns:repeat(3"] { grid-template-columns: repeat(2,1fr) !important; }
+    [style*="height:140px"] { height: 120px !important; }
+    select { font-size: 16px !important; width: 100% !important; }
+}
+@media (max-width: 480px) {
+    [style*="grid-template-columns:repeat(2"] { grid-template-columns: 1fr !important; }
+}
+</style>
+{% endblock %}

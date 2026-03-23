@@ -1,0 +1,177 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Chat{% endblock %}
+{% block content %}
+
+<style>
+* { box-sizing: border-box; }
+
+.chat-wrap {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 130px);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.chat-box {
+    flex: 1;
+    background: #f8f9ff;
+    border-radius: 14px;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.chat-input-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: #fff;
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    flex-shrink: 0;
+}
+
+.chat-textarea {
+    flex: 1;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    font-family: 'Sora', sans-serif;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 0;
+    max-height: 100px;
+    overflow-y: auto;
+}
+.chat-textarea:focus { border-color: #e94560; }
+
+.chat-send-btn {
+    background: #e94560;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+    height: 46px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+.chat-send-btn:hover { background: #c73652; }
+
+.msg-bubble {
+    max-width: 65%;
+    padding: 10px 14px;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .chat-wrap { height: calc(100vh - 110px); }
+    .chat-header { padding: 10px 12px; border-radius: 10px; }
+    .chat-box { padding: 10px; border-radius: 10px; }
+    .chat-input-wrap { padding: 8px 10px; border-radius: 10px; }
+    .chat-textarea { font-size: 16px !important; }
+    .msg-bubble { max-width: 85% !important; }
+}
+</style>
+
+<div class="chat-wrap">
+
+    <!-- Header -->
+    <div class="chat-header">
+        {% if is_admin %}
+        <a href="{% url 'inbox' %}" style="color:#e94560;text-decoration:none;font-size:1.3rem;flex-shrink:0;line-height:1;">←</a>
+        {% endif %}
+        {% if student.profile_photo %}
+        <img src="{{ student.profile_photo.url }}"
+             style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #e94560;flex-shrink:0;">
+        {% else %}
+        <div style="width:42px;height:42px;border-radius:50%;background:#e94560;
+                    display:flex;align-items:center;justify-content:center;
+                    color:#fff;font-weight:700;font-size:1rem;flex-shrink:0;">
+            {{ student.user.first_name|first|upper }}{{ student.user.last_name|first|upper }}
+        </div>
+        {% endif %}
+        <div style="min-width:0;">
+            <div style="font-weight:800;color:#1a1a2e;font-size:0.95rem;
+                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                {{ student.user.get_full_name|default:student.user.username }}
+            </div>
+            <div style="font-size:0.75rem;color:#aaa;">{{ student.roll_number }} · {{ student.course }}</div>
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-box" id="chatBox">
+        {% for msg in chat_messages %}
+        <div style="display:flex;{% if msg.sender.is_staff or msg.sender.is_superuser %}justify-content:flex-end{% else %}justify-content:flex-start{% endif %};">
+            <div class="msg-bubble" style="
+                border-radius:{% if msg.sender.is_staff or msg.sender.is_superuser %}16px 16px 4px 16px{% else %}16px 16px 16px 4px{% endif %};
+                background:{% if msg.sender.is_staff or msg.sender.is_superuser %}#1a1a2e{% else %}#fff{% endif %};
+                color:{% if msg.sender.is_staff or msg.sender.is_superuser %}#fff{% else %}#1a1a2e{% endif %};
+                {% if not msg.sender.is_staff and not msg.sender.is_superuser %}box-shadow:0 1px 4px rgba(0,0,0,0.08);{% endif %}">
+                <div style="font-size:0.88rem;line-height:1.5;">{{ msg.content }}</div>
+                <div style="font-size:0.68rem;margin-top:4px;text-align:right;
+                            color:{% if msg.sender.is_staff or msg.sender.is_superuser %}rgba(255,255,255,0.5){% else %}#aaa{% endif %};">
+                    {{ msg.created_at|date:"d M, h:i A" }}
+                    {% if msg.sender.is_staff or msg.sender.is_superuser %}
+                    · {% if msg.is_read %}✓✓{% else %}✓{% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align:center;color:#aaa;margin-top:auto;">
+            <div style="font-size:2.5rem;margin-bottom:8px;">💬</div>
+            <p style="font-size:0.88rem;">No messages yet. Start the conversation!</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Input -->
+    <form method="post" class="chat-input-wrap">
+        {% csrf_token %}
+        <textarea name="content" rows="1"
+                  placeholder="Type your message..."
+                  id="msgInput"
+                  class="chat-textarea"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.closest('form').submit();}"></textarea>
+        <button type="submit" class="chat-send-btn">Send ➤</button>
+    </form>
+
+</div>
+
+<script>
+var chatBox = document.getElementById('chatBox');
+chatBox.scrollTop = chatBox.scrollHeight;
+document.getElementById('msgInput').focus();
+
+var textarea = document.getElementById('msgInput');
+textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+</script>
+
+{% endblock %}

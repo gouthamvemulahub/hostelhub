@@ -1,0 +1,211 @@
+{% extends 'hostelapp/base.html' %}
+{% block public_content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HostelHub - Smart Hostel Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Sora', sans-serif; background: #0a0a1a; color: #fff; overflow-x: hidden; }
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #0f3460 100%);
+            display: flex; flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px; height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(233,69,96,0.15) 0%, transparent 70%);
+            top: -100px; right: -100px;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(15,52,96,0.4) 0%, transparent 70%);
+            bottom: -50px; left: -50px;
+        }
+        nav {
+            padding: 20px 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: relative; z-index: 10;
+        }
+        .logo { font-size: 1.5rem; font-weight: 800; }
+        .logo span { color: #e94560; }
+        .nav-links { display: flex; gap: 12px; }
+        .btn-nav {
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-nav.outline { border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); }
+        .btn-nav.outline:hover { border-color: #e94560; color: #e94560; }
+        .btn-nav.solid { background: #e94560; color: #fff; }
+        .btn-nav.solid:hover { background: #c73652; }
+        .hero-content {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 60px 20px;
+            position: relative; z-index: 10;
+        }
+        .hero-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(233,69,96,0.15);
+            border: 1px solid rgba(233,69,96,0.3);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-family: 'DM Mono', monospace;
+            color: #e94560;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+        }
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+        h1 .highlight { color: #e94560; }
+        .hero-sub {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.6);
+            max-width: 520px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+        .btn-hero {
+            padding: 14px 32px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .btn-hero.primary { background: #e94560; color: #fff; }
+        .btn-hero.primary:hover { background: #c73652; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(233,69,96,0.35); }
+        .btn-hero.ghost { border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.85); }
+        .btn-hero.ghost:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); }
+        .features {
+            padding: 80px 60px;
+            background: #0f0f1f;
+        }
+        .features-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .features h2 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 48px;
+            letter-spacing: -1px;
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            background: rgba(233,69,96,0.06);
+            border-color: rgba(233,69,96,0.2);
+            transform: translateY(-4px);
+        }
+        .feature-icon {
+            width: 48px; height: 48px;
+            background: rgba(233,69,96,0.15);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            color: #e94560;
+            margin-bottom: 16px;
+        }
+        .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+        .feature-card p { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+        footer {
+            text-align: center;
+            padding: 28px;
+            background: #0a0a1a;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.8rem;
+            font-family: 'DM Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+<section class="hero">
+    <nav>
+        <div class="logo"><span>Hostel</span>Hub</div>
+        <div class="nav-links">
+            <a href="{% url 'login' %}" class="btn-nav outline">Sign In</a>
+            <a href="{% url 'register' %}" class="btn-nav solid">Register</a>
+        </div>
+    </nav>
+    <div class="hero-content">
+        <div class="hero-tag">✦ SMART HOSTEL MANAGEMENT</div>
+        <h1>Manage your <span class="highlight">Hostel</span><br>with ease</h1>
+        <p class="hero-sub">A complete digital solution for room allotments, student management, and maintenance complaints — all in one place.</p>
+        <div class="hero-actions">
+            <a href="{% url 'register' %}" class="btn-hero primary">Get Started →</a>
+            <a href="{% url 'login' %}" class="btn-hero ghost">Sign In</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Everything you need</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-user-plus"></i></div>
+            <h3>Student Registration</h3>
+            <p>Easy onboarding for students with complete profile management including guardian details and course information.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-door-open"></i></div>
+            <h3>Room Management</h3>
+            <p>Manage single, double, triple and dormitory rooms. Track occupancy and availability in real-time.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-key"></i></div>
+            <h3>Room Allotment</h3>
+            <p>Seamlessly allot rooms to students and manage check-in/check-out with a complete history.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-tools"></i></div>
+            <h3>Complaints & Maintenance</h3>
+            <p>Students can raise complaints for electrical, plumbing, or other issues. Track resolution status live.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
+            <h3>Admin Dashboard</h3>
+            <p>Comprehensive overview of hostel stats, pending actions, and recent activities at a glance.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-bell"></i></div>
+            <h3>Notice Board</h3>
+            <p>Post important announcements and notices for all hostel residents instantly.</p>
+        </div>
+    </div>
+</section>
+<footer>© 2024 HostelHub — Built with Django &amp; Bootstrap</footer>
+</body>
+</html>
+{% endblock %}

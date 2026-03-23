@@ -1,0 +1,153 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}{{ title }}
+<style>
+@media (max-width: 768px) {
+    [style*="max-width"] { max-width: 100% !important; width: 100% !important; }
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    [style*="display:grid"] { grid-template-columns: 1fr !important; }
+    [style*="display:flex"] { flex-wrap: wrap !important; }
+    table { min-width: 500px; }
+    input, select, textarea { font-size: 16px !important; }
+    .col-md-4, .col-md-6, .col-lg-8 { padding: 4px 0; }
+    .card { margin-bottom: 12px; }
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-bullhorn" style="color:#e94560;"></i>
+                {{ title }}
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Notice Title</label>
+                        {{ form.title }}
+                        {% for e in form.title.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Priority</label>
+                        <div class="d-flex gap-3 mt-1">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 20px;border-radius:10px;border:2px solid #e0e0e0;flex:1;transition:all 0.2s;" id="label-normal">
+                                <input type="radio" name="priority" value="normal"
+                                    {% if not form.instance.pk or form.instance.priority == 'normal' %}checked{% endif %}
+                                    onchange="updatePriorityStyle()" style="accent-color:#3b82f6;">
+                                <span>
+                                    <i class="fas fa-bullhorn me-1" style="color:#3b82f6;"></i><strong>Normal</strong>
+                                    <div style="font-size:0.75rem;color:#888;">Regular announcement</div>
+                                </span>
+                            </label>
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 20px;border-radius:10px;border:2px solid #e0e0e0;flex:1;transition:all 0.2s;" id="label-urgent">
+                                <input type="radio" name="priority" value="urgent"
+                                    {% if form.instance.priority == 'urgent' %}checked{% endif %}
+                                    onchange="updatePriorityStyle()" style="accent-color:#e94560;">
+                                <span>
+                                    <i class="fas fa-exclamation-triangle me-1" style="color:#e94560;"></i><strong>Urgent</strong>
+                                    <div style="font-size:0.75rem;color:#888;">Immediate attention needed</div>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        {{ form.content }}
+                    </div>
+
+                    <!-- PHOTO UPLOAD -->
+                    <div class="mb-4">
+                        <label class="form-label">Photo <span style="color:#aaa;font-weight:400;">(optional)</span></label>
+
+                        {% if form.instance.photo %}
+                        <div class="mb-2" id="current-photo-wrap">
+                            <img src="{{ form.instance.photo.url }}" style="max-width:100%;max-height:260px;border-radius:12px;object-fit:cover;border:2px solid #e0e0e0;">
+                            <div style="font-size:0.78rem;color:#888;margin-top:4px;"><i class="fas fa-image me-1"></i>Current photo — upload a new one to replace it</div>
+                        </div>
+                        {% endif %}
+
+                        <div id="upload-box"
+                            style="border:2px dashed #e0e0e0;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafafa;"
+                            onclick="document.getElementById('photo-input').click()"
+                            ondragover="event.preventDefault();this.style.borderColor='#e94560';this.style.background='rgba(233,69,96,0.04)'"
+                            ondragleave="this.style.borderColor='#e0e0e0';this.style.background='#fafafa'"
+                            ondrop="handleDrop(event)">
+                            <i class="fas fa-cloud-upload-alt" style="font-size:2.5rem;color:#ccc;margin-bottom:10px;display:block;"></i>
+                            <div style="font-weight:600;color:#555;margin-bottom:4px;">Click to upload or drag &amp; drop</div>
+                            <div style="font-size:0.78rem;color:#aaa;">JPG, PNG, GIF &mdash; max 5MB</div>
+                        </div>
+
+                        <input type="file" id="photo-input" name="photo" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
+
+                        <div id="preview-wrap" style="display:none;margin-top:12px;">
+                            <img id="preview-img" style="max-width:100%;max-height:260px;border-radius:12px;object-fit:cover;border:2px solid #10b981;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                                <span style="font-size:0.78rem;color:#10b981;"><i class="fas fa-check-circle me-1"></i><span id="file-name"></span></span>
+                                <button type="button" onclick="clearPhoto()" style="background:none;border:none;color:#e94560;font-size:0.78rem;cursor:pointer;"><i class="fas fa-times me-1"></i>Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="d-flex align-items-center gap-2" style="cursor:pointer;">
+                            {{ form.is_active }}
+                            <span class="form-label mb-0">Active (visible to students)</span>
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'notice_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>{{ title }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updatePriorityStyle() {
+    const n = document.querySelector('input[value="normal"]').checked;
+    document.getElementById('label-normal').style.borderColor = n ? '#3b82f6' : '#e0e0e0';
+    document.getElementById('label-normal').style.background  = n ? 'rgba(59,130,246,0.05)' : '';
+    document.getElementById('label-urgent').style.borderColor = !n ? '#e94560' : '#e0e0e0';
+    document.getElementById('label-urgent').style.background  = !n ? 'rgba(233,69,96,0.05)' : '';
+}
+updatePriorityStyle();
+
+function previewPhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('file-name').textContent = input.files[0].name;
+            document.getElementById('preview-wrap').style.display = 'block';
+            document.getElementById('upload-box').style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function clearPhoto() {
+    document.getElementById('photo-input').value = '';
+    document.getElementById('preview-wrap').style.display = 'none';
+    document.getElementById('upload-box').style.display = 'block';
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('upload-box').style.borderColor = '#e0e0e0';
+    document.getElementById('upload-box').style.background = '#fafafa';
+    if (e.dataTransfer.files.length) {
+        document.getElementById('photo-input').files = e.dataTransfer.files;
+        previewPhoto(document.getElementById('photo-input'));
+    }
+}
+</script>
+{% endblock %}

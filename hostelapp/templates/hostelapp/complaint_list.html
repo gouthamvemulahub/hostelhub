@@ -1,0 +1,184 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Complaints
+<style>
+@media (max-width: 768px) {
+    [style*="max-width"] { max-width: 100% !important; width: 100% !important; }
+    [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    [style*="display:grid"] { grid-template-columns: 1fr !important; }
+    [style*="display:flex"] { flex-wrap: wrap !important; }
+    table { min-width: 500px; }
+    .table-wrap, div:has(> table) { overflow-x: auto !important; }
+    input, select, textarea { font-size: 16px !important; }
+    [style*="padding:36px"], [style*="padding:40px"], [style*="padding:44px"],
+    [style*="padding:48px"], [style*="padding:32px"] { padding: 16px !important; }
+    [style*="padding:28px"] { padding: 14px 12px !important; }
+    [style*="font-size:1.8rem"], [style*="font-size:2rem"], [style*="font-size:2.2rem"] { font-size: 1.3rem !important; }
+    [style*="gap:20px"], [style*="gap:24px"] { gap: 12px !important; }
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">📢 {% if is_admin %}All Complaints{% else %}Complaints{% endif %}</h4>
+        <p style="color:#6c757d;font-size:0.85rem;margin:4px 0 0;">Track and manage maintenance requests</p>
+    </div>
+</div>
+
+{% if not is_admin %}
+<!-- STUDENT TABS -->
+<div style="display:flex;gap:0;margin-bottom:24px;background:#f0f4ff;border-radius:12px;padding:4px;">
+    <button onclick="showTab('myComplaints')" id="tab_myComplaints"
+        style="flex:1;padding:10px;border:none;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;background:#1a1a2e;color:#fff;transition:all 0.2s;">
+        📋 My Complaints
+    </button>
+    <button onclick="showTab('newComplaint')" id="tab_newComplaint"
+        style="flex:1;padding:10px;border:none;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;background:transparent;color:#6c757d;transition:all 0.2s;">
+        ➕ New Complaint
+    </button>
+</div>
+
+<!-- MY COMPLAINTS TAB -->
+<div id="myComplaints">
+{% endif %}
+
+{% if is_admin %}
+<!-- Admin Filters -->
+<div class="mb-3 d-flex gap-2 flex-wrap align-items-center justify-content-between">
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="?status=" class="btn btn-sm {% if not request.GET.status %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+        <a href="?status=pending" class="btn btn-sm {% if request.GET.status == 'pending' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Pending</a>
+        <a href="?status=in_progress" class="btn btn-sm {% if request.GET.status == 'in_progress' %}btn-primary{% else %}btn-outline-secondary{% endif %}">In Progress</a>
+        <a href="?status=resolved" class="btn btn-sm {% if request.GET.status == 'resolved' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Resolved</a>
+    </div>
+    <a href="?sort=upvotes" class="btn btn-sm {% if sort == 'upvotes' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+        👍 Sort by Most Upvoted
+    </a>
+</div>
+{% else %}
+<!-- Student Status Filters -->
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <a href="?status=" style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;{% if not request.GET.status %}background:#1a1a2e;color:#fff{% else %}background:#fff;color:#888;border:1px solid #e0e0e0{% endif %}">All</a>
+    <a href="?status=pending" style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;{% if request.GET.status == 'pending' %}background:#f59e0b;color:#fff{% else %}background:#fff;color:#888;border:1px solid #e0e0e0{% endif %}">⏳ Pending</a>
+    <a href="?status=in_progress" style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;{% if request.GET.status == 'in_progress' %}background:#3b82f6;color:#fff{% else %}background:#fff;color:#888;border:1px solid #e0e0e0{% endif %}">🔧 In Progress</a>
+    <a href="?status=resolved" style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;{% if request.GET.status == 'resolved' %}background:#10b981;color:#fff{% else %}background:#fff;color:#888;border:1px solid #e0e0e0{% endif %}">✅ Resolved</a>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body p-0">
+        <div style="overflow-x:auto;"><table class="table mb-0">
+            <thead>
+                <tr>
+                    {% if is_admin %}<th>Student</th>{% endif %}
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th style="text-align:center;">👍 Votes</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in complaints %}
+                <tr>
+                    {% if is_admin %}
+                    <td>
+                        <div style="font-weight:600;font-size:0.85rem;">{{ complaint.student.user.get_full_name|default:complaint.student.user.username }}</div>
+                        <div style="font-size:0.75rem;color:#aaa;">{{ complaint.student.roll_number }}</div>
+                    </td>
+                    {% endif %}
+                    <td style="font-weight:600;font-size:0.88rem;">{{ complaint.title }}</td>
+                    <td><span style="font-size:0.82rem;color:#6c757d;">{{ complaint.get_category_display }}</span></td>
+                    <td>
+                        {% if complaint.priority == 'high' %}
+                        <span style="background:rgba(233,69,96,0.1);color:#e94560;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;">High</span>
+                        {% elif complaint.priority == 'medium' %}
+                        <span style="background:rgba(245,158,11,0.1);color:#f59e0b;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;">Medium</span>
+                        {% else %}
+                        <span style="background:rgba(16,185,129,0.1);color:#10b981;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;">Low</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="status-badge {{ complaint.status }}">{{ complaint.get_status_display }}</span></td>
+                    <td style="text-align:center;">
+                        {% if not is_admin %}
+                        <form method="post" action="{% url 'complaint_upvote' complaint.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" style="background:{% if complaint.user_upvoted %}#e94560{% else %}#f0f4ff{% endif %};color:{% if complaint.user_upvoted %}#fff{% else %}#0f3460{% endif %};border:none;border-radius:20px;padding:4px 12px;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                                👍 {{ complaint.upvote_count }}
+                            </button>
+                        </form>
+                        {% else %}
+                        <span style="font-weight:700;color:#0f3460;">{{ complaint.upvote_count }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.82rem;color:#6c757d;">{{ complaint.created_at|date:"d M Y" }}</td>
+                    <td>
+                        <a href="{% url 'complaint_detail' complaint.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if is_admin %}8{% else %}7{% endif %}" style="text-align:center;padding:40px;color:#aaa;">
+                        <div style="font-size:2.5rem;margin-bottom:8px;">📢</div>
+                        No complaints found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table></div>
+    </div>
+</div>
+
+{% if not is_admin %}
+</div><!-- end myComplaints tab -->
+
+<!-- NEW COMPLAINT TAB -->
+<div id="newComplaint" style="display:none;">
+    <div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:28px;max-width:680px;">
+        <h5 style="font-weight:700;color:#1a1a2e;margin-bottom:20px;">📝 New Complaint / Maintenance Request</h5>
+        <form method="post" action="{% url 'complaint_add' %}">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Category</label>
+                    {{ form.category }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Priority</label>
+                    {{ form.priority }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Title</label>
+                    {{ form.title }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:20px;">
+                <button type="submit" class="btn btn-primary">📤 Submit Complaint</button>
+                <button type="button" onclick="showTab('myComplaints')" class="btn btn-outline-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showTab(tab) {
+    document.getElementById('myComplaints').style.display  = tab === 'myComplaints'  ? 'block' : 'none';
+    document.getElementById('newComplaint').style.display  = tab === 'newComplaint'  ? 'block' : 'none';
+    document.getElementById('tab_myComplaints').style.background = tab === 'myComplaints' ? '#1a1a2e' : 'transparent';
+    document.getElementById('tab_myComplaints').style.color      = tab === 'myComplaints' ? '#fff'    : '#6c757d';
+    document.getElementById('tab_newComplaint').style.background = tab === 'newComplaint' ? '#e94560' : 'transparent';
+    document.getElementById('tab_newComplaint').style.color      = tab === 'newComplaint' ? '#fff'    : '#6c757d';
+}
+// If redirected back with error, show new complaint tab
+{% if show_form %}showTab('newComplaint');{% endif %}
+</script>
+{% endif %}
+
+{% endblock %}

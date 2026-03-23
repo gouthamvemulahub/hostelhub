@@ -1,0 +1,67 @@
+{% extends 'hostelapp/base.html' %}
+{% block page_title %}Upload Photos{% endblock %}
+{% block content %}
+<div style="max-width:600px;margin:0 auto;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <a href="{% url 'gallery' %}" style="color:#e94560;text-decoration:none;font-size:1.2rem;">←</a>
+        <h4 style="font-weight:800;color:#1a1a2e;margin:0;">📸 Upload Photos</h4>
+    </div>
+    {% for message in messages %}
+    <div style="padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:0.85rem;background:rgba(233,69,96,0.1);color:#e94560;">{{ message }}</div>
+    {% endfor %}
+    <div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:28px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="margin-bottom:18px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:6px;display:block;">Title <span style="color:#e94560;">*</span></label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Hostel Entrance, Dining Hall" required>
+            </div>
+            <div style="margin-bottom:18px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:6px;display:block;">Category</label>
+                <select name="category" class="form-control">
+                    {% for val, label in categories %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom:18px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:6px;display:block;">Description <span style="color:#aaa;font-weight:400;">(optional)</span></label>
+                <textarea name="description" class="form-control" rows="2" placeholder="Brief description..."></textarea>
+            </div>
+            <div style="margin-bottom:18px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" name="is_featured" style="width:16px;height:16px;">
+                    <span style="font-weight:600;font-size:0.85rem;color:#1a1a2e;">⭐ Mark as Featured</span>
+                </label>
+            </div>
+            <div style="margin-bottom:24px;">
+                <label style="font-weight:700;font-size:0.82rem;color:#444;margin-bottom:8px;display:block;">Photos <span style="color:#e94560;">*</span></label>
+                <div style="border:2px dashed #e0e0e0;border-radius:12px;padding:24px;text-align:center;cursor:pointer;"
+                     onclick="document.getElementById('photoInput').click()">
+                    <div style="font-size:2rem;margin-bottom:8px;">📷</div>
+                    <div style="font-weight:600;color:#1a1a2e;margin-bottom:4px;">Click to select photos</div>
+                    <div style="font-size:0.78rem;color:#aaa;">You can select multiple photos at once</div>
+                    <div id="fileCount" style="font-size:0.82rem;color:#e94560;margin-top:8px;font-weight:600;"></div>
+                </div>
+                <input type="file" id="photoInput" name="photos" accept="image/*" multiple
+                       style="display:none;" onchange="updateCount(this)" required>
+            </div>
+            <button type="submit" style="width:100%;background:#e94560;color:#fff;border:none;border-radius:10px;padding:13px;font-weight:700;font-size:0.95rem;cursor:pointer;">
+                📤 Upload Photos
+            </button>
+        </form>
+    </div>
+</div>
+<style>
+@media (max-width: 768px) {
+    [style*="max-width:600px"] { max-width: 100% !important; }
+    input, select, textarea { font-size: 16px !important; }
+}
+</style>
+<script>
+function updateCount(input) {
+    var count = input.files.length;
+    document.getElementById('fileCount').textContent = count + ' photo(s) selected';
+}
+</script>
+{% endblock %}
